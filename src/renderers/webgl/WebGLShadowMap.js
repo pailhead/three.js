@@ -95,8 +95,11 @@ function WebGLShadowMap( _renderer, _lights, _objects, capabilities ) {
 
 		if ( useInstance ) {	//ph
 
+			depthMaterial.defines = { IS_INSTANCED: true };
 
+			distanceMaterial.defines = { IS_INSTANCED: true };
 
+		}
 
 	}
 
