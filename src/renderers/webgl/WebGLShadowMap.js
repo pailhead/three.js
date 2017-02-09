@@ -34,8 +34,9 @@ function WebGLShadowMap( _renderer, _lights, _objects, capabilities ) {
 
 	_MorphingFlag = 1,
 	_SkinningFlag = 2,
+	_InstanceFlag = 4, //ph
 
-	_NumberOfMaterialVariants = ( _MorphingFlag | _SkinningFlag ) + 1,
+	_NumberOfMaterialVariants = ( _MorphingFlag | _SkinningFlag | _InstanceFlag ) + 1, //ph
 
 	_depthMaterials = new Array( _NumberOfMaterialVariants ),
 	_distanceMaterials = new Array( _NumberOfMaterialVariants ),
@@ -70,6 +71,7 @@ function WebGLShadowMap( _renderer, _lights, _objects, capabilities ) {
 
 		var useMorphing = ( i & _MorphingFlag ) !== 0;
 		var useSkinning = ( i & _SkinningFlag ) !== 0;
+		var useInstance = ( i & _InstanceFlag ) !== 0; //ph
 
 		var depthMaterial = depthMaterialTemplate.clone();
 		depthMaterial.morphTargets = useMorphing;
@@ -90,6 +92,11 @@ function WebGLShadowMap( _renderer, _lights, _objects, capabilities ) {
 		} );
 
 		_distanceMaterials[ i ] = distanceMaterial;
+
+		if ( useInstance ) {	//ph
+
+
+
 
 	}
 
@@ -352,10 +359,13 @@ function WebGLShadowMap( _renderer, _lights, _objects, capabilities ) {
 
 			var useSkinning = object.isSkinnedMesh && material.skinning;
 
+			var useInstance = geometry.isInstancedBufferGeometry; //ph
+
 			var variantIndex = 0;
 
 			if ( useMorphing ) variantIndex |= _MorphingFlag;
 			if ( useSkinning ) variantIndex |= _SkinningFlag;
+			if ( useInstance ) variantIndex |= _InstanceFlag; //ph
 
 			result = materialVariants[ variantIndex ];
 
