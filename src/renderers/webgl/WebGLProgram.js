@@ -158,13 +158,13 @@ function replaceClippingPlaneNums( string, parameters ) {
 
 }
 
-function parseIncludes( string ) {
+function parseIncludes( string, materialIncludes ) {
 
 	var pattern = /^[ \t]*#include +<([\w\d.]+)>/gm;
 
 	function replace( match, include ) {
 
-		var replace = ShaderChunk[ include ];
+		var replace = undefined !== materialIncludes[ include ] ? materialIncludes[ include ] : ShaderChunk[ include ];
 
 		if ( replace === undefined ) {
 
@@ -210,6 +210,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 	var vertexShader = shader.vertexShader;
 	var fragmentShader = shader.fragmentShader;
+	var materialIncludes = material.shaderIncludes;
 
 	var shadowMapTypeDefine = 'SHADOWMAP_TYPE_BASIC';
 
@@ -288,6 +289,8 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 	var customExtensions = generateExtensions( material.extensions, parameters, extensions );
 
 	var customDefines = generateDefines( defines );
+
+	var customIncludes = undefined !== materialIncludes ? materialIncludes : {};
 
 	//
 
@@ -503,11 +506,12 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 	}
 
-	vertexShader = parseIncludes( vertexShader );
+	vertexShader = parseIncludes( vertexShader, customIncludes );
 	vertexShader = replaceLightNums( vertexShader, parameters );
 	vertexShader = replaceClippingPlaneNums( vertexShader, parameters );
 
-	fragmentShader = parseIncludes( fragmentShader );
+
+	fragmentShader = parseIncludes( fragmentShader, customIncludes );
 	fragmentShader = replaceLightNums( fragmentShader, parameters );
 	fragmentShader = replaceClippingPlaneNums( fragmentShader, parameters );
 
