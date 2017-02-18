@@ -1499,9 +1499,13 @@ function WebGLRenderer( parameters ) {
 
 				var shader = ShaderLib[ parameters.shaderID ];
 
+				var combinedUniforms = undefined !== material.shaderUniforms ?
+					UniformsUtils.merge( [ UniformsUtils.clone( shader.uniforms ), material.shaderUniforms ] ) :
+					UniformsUtils.clone( shader.uniforms );
+
 				materialProperties.shader = {
 					name: material.type,
-					uniforms: UniformsUtils.clone( shader.uniforms ),
+					uniforms: combinedUniforms,
 					vertexShader: shader.vertexShader,
 					fragmentShader: shader.fragmentShader
 				};
@@ -1903,6 +1907,13 @@ function WebGLRenderer( parameters ) {
 
 			}
 
+			//refresh shaderUniforms
+			if ( undefined !== material.shaderUniforms ) {
+
+				refreshUniformsCustom( m_uniforms, material );
+
+			}
+
 			// RectAreaLight Texture
 			// TODO (mrdoob): Find a nicer implementation
 
@@ -2063,6 +2074,14 @@ function WebGLRenderer( parameters ) {
 			uniforms.uvTransform.value.copy( uvScaleMap.matrix );
 
 		}
+
+	}
+
+	function refreshUniformsCustom( uniforms, material ) {
+
+		for ( var uniform in material.shaderUniforms )
+
+			uniforms[ uniform ].value = material.shaderUniforms[ uniform ].value;
 
 	}
 
