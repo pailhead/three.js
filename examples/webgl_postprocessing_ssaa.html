@@ -107,6 +107,15 @@
 				mesh.position.x = - 100;
 				scene.add( mesh );
 
+				function onWillUpdate(){
+					console.log( 'foo' );
+					debugger
+					this.rotation.x += 0.005;
+					this.rotation.y += 0.01;
+				}
+
+				mesh.addEventListener( 'willUpdate' , onWillUpdate );
+
 				var texture = new THREE.TextureLoader().load( "textures/brick_diffuse.jpg" );
 				texture.minFilter = THREE.NearestFilter;
 				texture.magFilter = THREE.NearestFilter;
@@ -118,6 +127,8 @@
 				var mesh = new THREE.Mesh( geometry, material );
 				mesh.position.x = 100;
 				scene.add( mesh );
+
+				mesh.addEventListener( 'willUpdate' , onWillUpdate );
 
 				// postprocessing
 
@@ -157,15 +168,16 @@
 				requestAnimationFrame( animate );
 
 				stats.begin();
+				console.log( 'bar' );
 
-				for ( var i = 0; i < scene.children.length; i ++ ) {
+				// for ( var i = 0; i < scene.children.length; i ++ ) {
 
-					var child = scene.children[ i ];
+				// 	var child = scene.children[ i ];
 
-					child.rotation.x += 0.005;
-					child.rotation.y += 0.01;
+				// 	child.rotation.x += 0.005;
+				// 	child.rotation.y += 0.01;
 
-				}
+				// }
 
 				ssaaRenderPass.sampleLevel = param.sampleLevel;
 

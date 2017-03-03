@@ -96,6 +96,9 @@ function Object3D() {
 	this.onBeforeRender = function () {};
 	this.onAfterRender = function () {};
 
+	this.onBeforeUpdate = function () {};
+	this.onAfterUpdate = function () {};
+
 }
 
 Object3D.DefaultUp = new Vector3( 0, 1, 0 );
@@ -534,6 +537,8 @@ Object.assign( Object3D.prototype, EventDispatcher.prototype, {
 
 	updateMatrixWorld: function ( force ) {
 
+		this.dispatchEvent( { type: 'willUpdate' } );
+
 		if ( this.matrixAutoUpdate ) this.updateMatrix();
 
 		if ( this.matrixWorldNeedsUpdate || force ) {
@@ -554,6 +559,8 @@ Object.assign( Object3D.prototype, EventDispatcher.prototype, {
 
 		}
 
+		this.dispatchEvent( { type: 'hasUpdated' } );
+		
 		// update children
 
 		var children = this.children;
