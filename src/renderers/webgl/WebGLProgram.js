@@ -150,13 +150,13 @@ function replaceLightNums( string, parameters ) {
 
 }
 
-function parseIncludes( string ) {
+function parseIncludes( string , materialIncludes ) {
 
 	var pattern = /#include +<([\w\d.]+)>/g;
 
 	function replace( match, include ) {
 
-		var replace = ShaderChunk[ include ];
+		var replace = undefined !== materialIncludes[ include ] ? materialIncludes[ include ] : ShaderChunk[ include ];
 
 		if ( replace === undefined ) {
 
@@ -200,6 +200,8 @@ function WebGLProgram( renderer, code, material, parameters ) {
 
 	var extensions = material.extensions;
 	var defines = material.defines;
+
+	var materialIncludes = material.shaderIncludes;
 
 	var vertexShader = material.__webglShader.vertexShader;
 	var fragmentShader = material.__webglShader.fragmentShader;
@@ -282,6 +284,8 @@ function WebGLProgram( renderer, code, material, parameters ) {
 
 	var customDefines = generateDefines( defines );
 
+	var customIncludes = undefined !== materialIncludes ? materialIncludes : {};
+
 	//
 
 	var program = gl.createProgram();
@@ -311,7 +315,6 @@ function WebGLProgram( renderer, code, material, parameters ) {
 
 		prefixVertex = [
 
-        
 			'precision ' + parameters.precision + ' float;',
 			'precision ' + parameters.precision + ' int;',
 
@@ -326,7 +329,6 @@ function WebGLProgram( renderer, code, material, parameters ) {
 			'#define MAX_BONES ' + parameters.maxBones,
 			( parameters.useFog && parameters.fog ) ? '#define USE_FOG' : '',
 			( parameters.useFog && parameters.fogExp ) ? '#define FOG_EXP2' : '',
-
 
 			parameters.map ? '#define USE_MAP' : '',
 			parameters.envMap ? '#define USE_ENVMAP' : '',
@@ -493,10 +495,10 @@ function WebGLProgram( renderer, code, material, parameters ) {
 
 	}
 
-	vertexShader = parseIncludes( vertexShader, parameters );
+	vertexShader = parseIncludes( vertexShader, customIncludes );
 	vertexShader = replaceLightNums( vertexShader, parameters );
 
-	fragmentShader = parseIncludes( fragmentShader, parameters );
+	fragmentShader = parseIncludes( fragmentShader, customIncludes );
 	fragmentShader = replaceLightNums( fragmentShader, parameters );
 
 	if ( ! material.isShaderMaterial ) {
