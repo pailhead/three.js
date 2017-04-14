@@ -192,7 +192,6 @@
 				var materials = {
 					
 					phong: new THREE.MeshPhongMaterial( {
-						color: 0xff0000,
 						shininess: 150,
 						specular: 0x222222,
 						shading: THREE.SmoothShading
@@ -256,7 +255,8 @@
 						position: new THREE.Vector3( Math.random() * 2 - 1 , 0 , Math.random() * 2 - 1 ).multiplyScalar( 14 ),
 						rotation: rot,
 						quaternion: quat,
-						scale: new THREE.Vector3( Math.random() + .5 , Math.random() + .5 , Math.random() + .5 )
+						scale: new THREE.Vector3( Math.random() + .5 , Math.random() + .5 , Math.random() + .5 ),
+						color: new THREE.Color( Math.random() , Math.random() , Math.random() )
 					});
 
 				}
@@ -300,9 +300,12 @@
 
 									// 	//InstancedMesh will automatically extract the matrix from this object at this index
 									// },
-									dynamic, 
-									
- 									//is the scale known to be uniform, will do less shader work, improperly applying this will result in wrong shading 
+
+									dynamic,
+
+									true,
+
+ 									//is the scale known to be uniform, will do less shader work, improperly applying this will result in wrong shading
 									!!uScale
 
 								);
@@ -311,9 +314,10 @@
 
 								for ( var i = 0 ; i < iNum ; i++ ){
 
-									instancedMesh.setPositionAt( 	i , trsCache[ i ].position );
-									instancedMesh.setQuaternionAt( 	i , trsCache[ i ].quaternion );
-									instancedMesh.setScaleAt( 		i , uScale ? ss : trsCache[ i ].scale );
+									instancedMesh.setPositionAt( i , trsCache[ i ].position );
+									instancedMesh.setQuaternionAt( i , trsCache[ i ].quaternion );
+									instancedMesh.setScaleAt( i , uScale ? ss : trsCache[ i ].scale );
+									instancedMesh.setColorAt( i , trsCache[ i ].color );
 
 								}
 

@@ -5,6 +5,12 @@
 
 #endif
 
+#if defined ( INSTANCE_COLOR )
+
+attribute vec3 instanceColor;
+
+#endif
+
 //for now the most convenient place to attach vert transformation logic in global scope
 #if defined ( INSTANCE_TRANSFORM )
 
@@ -62,8 +68,5 @@ mat4 getInstanceMatrix(){
 
 	);
 }
-
-
-
 
 #endif
