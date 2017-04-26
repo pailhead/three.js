@@ -1,5 +1,11 @@
-#if defined(USE_COLOR) || defined(INSTANCE_COLOR)
+#if defined(USE_COLOR)
 
 	diffuseColor.rgb *= vColor;
+
+#endif
+
+#if defined(INSTANCE_COLOR)
+
+	diffuseColor.rgb *= vInstanceColor;
 
 #endif

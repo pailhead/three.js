@@ -1,9 +1,11 @@
-#ifdef INSTANCE_COLOR
-
-	vColor.xyz = instanceColor.xyz;
-
-#elif defined(USE_COLOR)
+#ifdef USE_COLOR
 
 	vColor.xyz = color.xyz;
+
+#endif
+
+#ifdef INSTANCE_COLOR
+
+	vInstanceColor.xyz = instanceColor.xyz;
 
 #endif

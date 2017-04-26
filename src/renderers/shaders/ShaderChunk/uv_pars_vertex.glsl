@@ -8,6 +8,7 @@
 #if defined ( INSTANCE_COLOR )
 
 attribute vec3 instanceColor;
+varying vec3 vInstanceColor;
 
 #endif
 
