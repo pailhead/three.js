@@ -30,8 +30,8 @@ depthMaterialTemplate.defines = {
 
 };
 
-var 
-	
+var
+
 	distanceShader = ShaderLib[ "distanceRGBA" ],
 	distanceUniforms = UniformsUtils.clone( distanceShader.uniforms ),
 	distanceMaterialTemplate = new ShaderMaterial( {
@@ -46,7 +46,7 @@ var
 	})
 ;
 
-function InstancedMesh ( bufferGeometry , material , numInstances , dynamic , uniformScale ) {
+function InstancedMesh ( bufferGeometry , material , numInstances , dynamic , color, uniformScale ) {
 
 	Mesh.call( this , (new InstancedBufferGeometry()).copy( bufferGeometry ) );
 
@@ -56,10 +56,12 @@ function InstancedMesh ( bufferGeometry , material , numInstances , dynamic , un
 
 	this._setAttributes();
 
+ 	this._uniformScale = !!uniformScale;
+
+ 	this._color = !!color;
+
 	//use the setter to decorate this material
 	this.material = material.clone();
- 	
- 	this._uniformScale = !!uniformScale;
 
 	this.frustumCulled = false; //you can uncheck this if you generate your own bounding info
 
@@ -79,23 +81,13 @@ Object.defineProperties( InstancedMesh.prototype , {
 
 	'material': {
 
-		set: function( m ){ 
+		set: function( m ){
+			if (!m.defines) m.defines = {};
 
-			if ( m.defines ) {
-			
-				m.defines.INSTANCE_TRANSFORM = '';
-				
-				if( this._uniformScale) m.defines.INSTANCE_UNIFORM = '';
+			m.defines.INSTANCE_TRANSFORM = '';
+			if ( this._uniformScale ) m.defines.INSTANCE_UNIFORM = '';
 
-			}
-
-			else{ 
-			
-				m.defines = { INSTANCE_TRANSFORM: '' };
-
-				if ( this._uniformScale ) m.defines.INSTANCE_UNIFORM = '';
-			
-			}
+			if ( this._color ) m.defines.INSTANCE_COLOR = '';
 
 			this._material = m;
 
@@ -164,9 +156,15 @@ InstancedMesh.prototype.setScaleAt = function ( index , scale ) {
 
 };
 
-InstancedMesh.prototype.needsUpdate = function( attribute ){
+InstancedMesh.prototype.setColorAt = function ( index , color ) {
 
-	switch ( attribute ){
+	this.geometry.attributes.instanceColor.setXYZ( index , color.r , color.g , color.b );
+
+};
+
+InstancedMesh.prototype.needsUpdate = function( attribute ) {
+
+	switch ( attribute ) {
 
 		case 'position' :
 
@@ -186,11 +184,18 @@ InstancedMesh.prototype.needsUpdate = function( attribute ){
 
 			break;
 
+		case 'color' :
+
+			this.geometry.attributes.instanceColor.needsUpdate = 		true;
+
+			break;
+
 		default:
 
 			this.geometry.attributes.instancePosition.needsUpdate = 	true;
 			this.geometry.attributes.instanceQuaternion.needsUpdate = 	true;
 			this.geometry.attributes.instanceScale.needsUpdate = 		true;
+			this.geometry.attributes.instanceColor.needsUpdate = 		true;
 
 			break;
 
@@ -200,10 +205,12 @@ InstancedMesh.prototype.needsUpdate = function( attribute ){
 
 InstancedMesh.prototype._setAttributes = function(){
 
-	this.geometry.addAttribute( 'instancePosition' , 	new THREE.InstancedBufferAttribute( new Float32Array( this.numInstances * 3 ) , 3 , 1 ) ); 
-	this.geometry.addAttribute( 'instanceQuaternion' , 	new THREE.InstancedBufferAttribute( new Float32Array( this.numInstances * 4 ) , 4 , 1 ) );
-	this.geometry.addAttribute( 'instanceScale' , 		new THREE.InstancedBufferAttribute( new Float32Array( this.numInstances * 3 ) , 3 , 1 ) );
+	this.geometry.addAttribute( 'instanceColor', new THREE.InstancedBufferAttribute( new Float32Array( this.numInstances * 3 ), 3, 1 ) );
+	this.geometry.addAttribute( 'instancePosition', new THREE.InstancedBufferAttribute( new Float32Array( this.numInstances * 3 ), 3, 1 ) );
+	this.geometry.addAttribute( 'instanceQuaternion', new THREE.InstancedBufferAttribute( new Float32Array( this.numInstances * 4 ), 4, 1 ) );
+	this.geometry.addAttribute( 'instanceScale', new THREE.InstancedBufferAttribute( new Float32Array( this.numInstances * 3 ), 3, 1 ) );
 
+	this.geometry.attributes.instanceColor.dynamic = this._dynamic;
 	this.geometry.attributes.instancePosition.dynamic = this._dynamic;
 	this.geometry.attributes.instanceQuaternion.dynamic = this._dynamic;
 	this.geometry.attributes.instanceScale.dynamic = this._dynamic;
