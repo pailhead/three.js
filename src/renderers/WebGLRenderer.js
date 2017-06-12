@@ -1506,7 +1506,7 @@ function WebGLRenderer( parameters ) {
 					UniformsUtils.clone( shader.uniforms );
 
 				//if shader uniforms are present
-				for ( var u in material.shaderUniforms ) {
+				for ( var u in material.shaderUniforms ) { //could be uniforms specificly for frag and for vert?
 
 					var uniform = material.shaderUniforms[ u ];
 					var type = uniform.type;
@@ -1522,8 +1522,8 @@ function WebGLRenderer( parameters ) {
 				materialProperties.shader = {
 					name: material.type,
 					uniforms: combinedUniforms,
-					vertexShader: shaderUniformsGLSL + shader.vertexShader, //maybe inject somewhere else?
-					fragmentShader: shader.fragmentShader
+					vertexShader: shaderUniformsGLSL + shader.vertexShader,
+					fragmentShader: shaderUniformsGLSL + shader.fragmentShader //maybe not use the same
 				};
 
 			} else {
