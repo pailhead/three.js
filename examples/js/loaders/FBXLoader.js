@@ -20,16 +20,11 @@
 
 	THREE.FBXLoader = function ( manager ) {
 
-		THREE.Loader.call( this );
 		this.manager = ( manager !== undefined ) ? manager : THREE.DefaultLoadingManager;
 		this.textureLoader = null;
 		this.textureBasePath = null;
 
 	};
-
-	THREE.FBXLoader.prototype = Object.create( THREE.Loader.prototype );
-
-	THREE.FBXLoader.prototype.constructor = THREE.FBXLoader;
 
 	Object.assign( THREE.FBXLoader.prototype, {
 
@@ -463,6 +458,20 @@
 			}
 
 			if ( geometry.bones !== undefined && geometry.skinWeights !== undefined && geometry.skinWeights.length > 0 ) {
+
+				if ( material instanceof THREE.MultiMaterial ) {
+
+					for ( var i = 0; i < material.materials.length; ++ i ) {
+
+						material.materials[ i ].skinning = true;
+
+					}
+
+				} else {
+
+					material.skinning = true;
+
+				}
 
 				mesh = new THREE.SkinnedMesh( geometry, material );
 

@@ -635,6 +635,7 @@
 			var skeleton = new THREE.Skeleton( allBones, offsetMatrix );
 
 			this.threeNode.bind( skeleton, new THREE.Matrix4() );
+			this.threeNode.material.skinning = true;
 
 		};
 
@@ -966,7 +967,7 @@
 
 			}
 
-			return THREE.ImageUtils.loadTexture( baseURL + path );
+			return new THREE.TextureLoader().load( baseURL + path );
 
 		};
 

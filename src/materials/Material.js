@@ -59,26 +59,9 @@ function Material() {
 
 	this.visible = true;
 
-	this._needsUpdate = true;
+	this.needsUpdate = true;
 
 }
-
-Object.defineProperty( Material.prototype, 'needsUpdate', {
-
-	get: function () {
-
-		return this._needsUpdate;
-
-	},
-
-	set: function ( value ) {
-
-		if ( value === true ) this.update();
-		this._needsUpdate = value;
-
-	}
-
-} );
 
 Object.assign( Material.prototype, EventDispatcher.prototype, {
 
@@ -232,6 +215,7 @@ Object.assign( Material.prototype, EventDispatcher.prototype, {
 		if ( this.wireframeLinecap !== 'round' ) data.wireframeLinecap = this.wireframeLinecap;
 		if ( this.wireframeLinejoin !== 'round' ) data.wireframeLinejoin = this.wireframeLinejoin;
 
+		data.skinning = this.skinning;
 		data.morphTargets = this.morphTargets;
 
 		// TODO: Copied from Object3D.toJSON
@@ -332,12 +316,6 @@ Object.assign( Material.prototype, EventDispatcher.prototype, {
 		this.clippingPlanes = dstPlanes;
 
 		return this;
-
-	},
-
-	update: function () {
-
-		this.dispatchEvent( { type: 'update' } );
 
 	},
 
