@@ -1499,15 +1499,16 @@ function WebGLRenderer( parameters ) {
 
 				var shader = ShaderLib[ parameters.shaderID ];
 
-				//if any extra uniforms are provided, merge them with the others
+				// 1. if any extra uniforms are provided, merge them with the others
 				var combinedUniforms = undefined !== material.shaderUniforms ?
 					UniformsUtils.merge( [ UniformsUtils.clone( shader.uniforms ), material.shaderUniforms ] ) :
 					UniformsUtils.clone( shader.uniforms );
 
+				// if the uniform is provided with { value , type } inject this GLSL automatically
+				// (no need to write `uniform float uFoo;` and include manually in a snippet)
+				// which may be a poor idea because they would get injected into both vert and frag
 				var shaderUniformsGLSL = ''; //collect the GLSL in here
 
-				//if the uniform is provided with { value , type } inject this GLSL automatically
-				//(no need to write `uniform float uFoo;` and include manually in a snippet) nor do the imperative onBeforeCompile
 				for ( var uniformName in material.shaderUniforms ) {
 
 					var type = material.shaderUniforms[ uniformName ].type;
@@ -1846,7 +1847,14 @@ function WebGLRenderer( parameters ) {
 
 			}
 
-			// refresh uniforms common to several materials
+			//2. follow the same pattern with common uniforms -
+			//   refreshUniformsCommon looks at some known uniforms and refreshes them
+			//   refreshUniformsCustom should look at unknown uniforms but in a known place
+			if ( undefined !== material.shaderUniforms ) {
+
+				refreshUniformsCustom( m_uniforms, material );
+
+			}
 
 			if ( fog && material.fog ) {
 
@@ -1924,13 +1932,6 @@ function WebGLRenderer( parameters ) {
 
 				m_uniforms.color.value = material.color;
 				m_uniforms.opacity.value = material.opacity;
-
-			}
-
-			//refresh shaderUniforms
-			if ( undefined !== material.shaderUniforms ) {
-
-				refreshUniformsCustom( m_uniforms, material );
 
 			}
 
@@ -2097,6 +2098,7 @@ function WebGLRenderer( parameters ) {
 
 	}
 
+	//3. same pattern as refreshUniformsFOO
 	function refreshUniformsCustom( uniforms, material ) {
 
 		for ( var uniform in material.shaderUniforms )
