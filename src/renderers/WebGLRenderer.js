@@ -1495,35 +1495,39 @@ function WebGLRenderer( parameters ) {
 
 		if ( programChange ) {
 
-			var shaderUniformsGLSL = '';
-
 			if ( parameters.shaderID ) {
 
 				var shader = ShaderLib[ parameters.shaderID ];
 
+				//if any extra uniforms are provided, merge them with the others
 				var combinedUniforms = undefined !== material.shaderUniforms ?
 					UniformsUtils.merge( [ UniformsUtils.clone( shader.uniforms ), material.shaderUniforms ] ) :
 					UniformsUtils.clone( shader.uniforms );
 
-				//if shader uniforms are present
-				for ( var u in material.shaderUniforms ) { //could be uniforms specificly for frag and for vert?
+				var shaderUniformsGLSL = ''; //collect the GLSL in here
 
-					var uniform = material.shaderUniforms[ u ];
-					var type = uniform.type;
+				//if the uniform is provided with { value , type } inject this GLSL automatically
+				//(no need to write `uniform float uFoo;` and include manually in a snippet) nor do the imperative onBeforeCompile
+				for ( var uniformName in material.shaderUniforms ) {
+
+					var type = material.shaderUniforms[ uniformName ].type;
 
 					if ( type ) {
 
-						shaderUniformsGLSL += 'uniform ' + type + ' ' + u + ';\n';
+						shaderUniformsGLSL += 'uniform ' + type + ' ' + uniformName + ';\n';
 
 					}
 
 				}
 
+				//inject these here, maybe this is a bad idea
+				//because they end up in both vert and frag
 				materialProperties.shader = {
 					name: material.type,
 					uniforms: combinedUniforms,
 					vertexShader: shaderUniformsGLSL + shader.vertexShader,
 					fragmentShader: shaderUniformsGLSL + shader.fragmentShader //maybe not use the same
+
 				};
 
 			} else {
