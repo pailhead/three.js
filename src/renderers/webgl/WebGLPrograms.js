@@ -248,7 +248,7 @@ function WebGLPrograms( renderer, extensions, capabilities ) {
 
 			for ( var include in material.shaderIncludes ) {
 
-				//5. do proper hashing, onBeforeCompile.toString() had some issues
+				//4. hash with chunks?
 				array.push( material.shaderIncludes[ include ] );
 
 			}

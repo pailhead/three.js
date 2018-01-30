@@ -1528,7 +1528,6 @@ function WebGLRenderer( parameters ) {
 					uniforms: combinedUniforms,
 					vertexShader: shaderUniformsGLSL + shader.vertexShader,
 					fragmentShader: shaderUniformsGLSL + shader.fragmentShader //maybe not use the same
-
 				};
 
 			} else {
@@ -2098,7 +2097,7 @@ function WebGLRenderer( parameters ) {
 
 	}
 
-	//3. same pattern as refreshUniformsFOO
+	//2. same pattern as refreshUniformsFoobar
 	function refreshUniformsCustom( uniforms, material ) {
 
 		for ( var uniform in material.shaderUniforms )

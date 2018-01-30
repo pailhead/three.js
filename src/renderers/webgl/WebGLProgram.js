@@ -158,17 +158,15 @@ function replaceClippingPlaneNums( string, parameters ) {
 
 }
 
-//4. allow parsing of a custom dictionary, not just THREE.ShaderChunk
+//3. allow parsing of a custom dictionary, not just THREE.ShaderChunk
 function parseIncludes( string, materialIncludes ) {
 
 	var pattern = /^[ \t]*#include +<([\w\d.]+)>/gm;
 
 	function replace( match, include ) {
 
-		//if there are material includes provided use those instead of the default chunks:
-		var replace = undefined !== materialIncludes[ include ] ?
-			materialIncludes[ include ] :
-			ShaderChunk[ include ];
+		//3. if there are material includes provided use those instead of the default chunks:
+		var replace = undefined !== materialIncludes[ include ] ? materialIncludes[ include ] : ShaderChunk[ include ];
 
 		if ( replace === undefined ) {
 
@@ -212,7 +210,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 	var defines = material.defines;
 
-	var materialIncludes = material.shaderIncludes; //custom chunks
+	var materialIncludes = material.shaderIncludes; //custom chunks 
 	var vertexShader = shader.vertexShader;
 	var fragmentShader = shader.fragmentShader;
 	var materialIncludes = material.shaderIncludes;
@@ -511,7 +509,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 	}
 
-	//4. provide optional chunk dictionary
+	//3. provide optional chunk dictionary customIncludes
 	vertexShader = parseIncludes( vertexShader, customIncludes );
 	vertexShader = replaceLightNums( vertexShader, parameters );
 	vertexShader = replaceClippingPlaneNums( vertexShader, parameters );
