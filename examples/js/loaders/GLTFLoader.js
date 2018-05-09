@@ -754,7 +754,12 @@ THREE.GLTFLoader = ( function () {
 
 			},
 
+			refreshUniforms: function () {
+				/*NOOP*/
+			}
+
 		};
+
 
 	}
 
