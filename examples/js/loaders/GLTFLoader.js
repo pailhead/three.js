@@ -246,9 +246,9 @@ THREE.GLTFLoader = ( function () {
 	/**
 	 * DDS Texture Extension
 	 *
-	 * Specification: 
+	 * Specification:
 	 * https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/MSFT_texture_dds
-	 * 
+	 *
 	 */
 	function GLTFTextureDDSExtension() {
 
@@ -455,7 +455,7 @@ THREE.GLTFLoader = ( function () {
 	 *
 	 * Specification: https://github.com/KhronosGroup/glTF/pull/874
 	 */
-	function GLTFDracoMeshCompressionExtension ( json, dracoLoader ) {
+	function GLTFDracoMeshCompressionExtension( json, dracoLoader ) {
 
 		if ( ! dracoLoader ) {
 
@@ -481,7 +481,7 @@ THREE.GLTFLoader = ( function () {
 
 		for ( var attributeName in gltfAttributeMap ) {
 
-			if ( !( attributeName in ATTRIBUTES ) ) continue;
+			if ( ! ( attributeName in ATTRIBUTES ) ) continue;
 
 			threeAttributeMap[ ATTRIBUTES[ attributeName ] ] = gltfAttributeMap[ attributeName ];
 
@@ -494,7 +494,7 @@ THREE.GLTFLoader = ( function () {
 				var accessorDef = json.accessors[ primitive.attributes[ attributeName ] ];
 				var componentType = WEBGL_COMPONENT_TYPES[ accessorDef.componentType ];
 
-				attributeTypeMap[ ATTRIBUTES[ attributeName ] ]  = componentType;
+				attributeTypeMap[ ATTRIBUTES[ attributeName ] ] = componentType;
 				attributeNormalizedMap[ ATTRIBUTES[ attributeName ] ] = accessorDef.normalized === true;
 
 			}
@@ -565,7 +565,9 @@ THREE.GLTFLoader = ( function () {
 
 			getMaterialType: function () {
 
-				return THREE.ShaderMaterial;
+				// return THREE.ShaderMaterial;
+				// return THREE.MeshStandardMaterial
+				return 'SPEC_GLOSS';
 
 			},
 
@@ -573,21 +575,21 @@ THREE.GLTFLoader = ( function () {
 
 				var pbrSpecularGlossiness = material.extensions[ this.name ];
 
-				var shader = THREE.ShaderLib[ 'standard' ];
+				// var shader = THREE.ShaderLib[ 'standard' ];
 
-				var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
+				// var uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
-				var specularMapParsFragmentChunk = [
-					'#ifdef USE_SPECULARMAP',
-					'	uniform sampler2D specularMap;',
-					'#endif'
-				].join( '\n' );
+				// var specularMapParsFragmentChunk = [
+				// 	'#ifdef USE_SPECULARMAP',
+				// 	'	uniform sampler2D specularMap;',
+				// 	'#endif'
+				// ].join( '\n' );
 
-				var glossinessMapParsFragmentChunk = [
-					'#ifdef USE_GLOSSINESSMAP',
-					'	uniform sampler2D glossinessMap;',
-					'#endif'
-				].join( '\n' );
+				// var glossinessMapParsFragmentChunk = [
+				// 	'#ifdef USE_GLOSSINESSMAP',
+				// 	'	uniform sampler2D glossinessMap;',
+				// 	'#endif'
+				// ].join( '\n' );
 
 				var specularMapFragmentChunk = [
 					'vec3 specularFactor = specular;',
@@ -615,29 +617,48 @@ THREE.GLTFLoader = ( function () {
 					'material.specularColor = specularFactor.rgb;',
 				].join( '\n' );
 
-				var fragmentShader = shader.fragmentShader
-					.replace( 'uniform float roughness;', 'uniform vec3 specular;' )
-					.replace( 'uniform float metalness;', 'uniform float glossiness;' )
-					.replace( '#include <roughnessmap_pars_fragment>', specularMapParsFragmentChunk )
-					.replace( '#include <metalnessmap_pars_fragment>', glossinessMapParsFragmentChunk )
-					.replace( '#include <roughnessmap_fragment>', specularMapFragmentChunk )
-					.replace( '#include <metalnessmap_fragment>', glossinessMapFragmentChunk )
-					.replace( '#include <lights_physical_fragment>', lightPhysicalFragmentChunk );
+				params.shaderUniforms = {
+					specular: { value: new THREE.Color().setHex( 0x111111 ), type: 'vec3' }, //atm these end up in both vert and frag :/
+					glossiness: { value: 0.5, type: 'float' },
+					glossinessMap: { value: null, type: 'sampler2D' },
+					specularMap: { value: null, type: 'sampler2D' },
+				};
 
-				delete uniforms.roughness;
-				delete uniforms.metalness;
-				delete uniforms.roughnessMap;
-				delete uniforms.metalnessMap;
+				params.shaderIncludes = {
+					// roughnessmap_pars_fragment: specularMapParsFragmentChunk,
+					// metalnessmap_pars_fragment: glossinessMapParsFragmentChunk,
+					roughnessmap_fragment: specularMapFragmentChunk,
+					metalnessmap_fragment: glossinessMapFragmentChunk,
+					lights_physical_fragment: lightPhysicalFragmentChunk,
+				};
 
-				uniforms.specular = { value: new THREE.Color().setHex( 0x111111 ) };
-				uniforms.glossiness = { value: 0.5 };
-				uniforms.specularMap = { value: null };
-				uniforms.glossinessMap = { value: null };
+				// params.onBeforeCompile = shader =>{
+				// 	shader.fragmentShader = shader.fragmentShader.replace( 'uniform float roughness;', '' )
+				// 	shader.fragmentShader = shader.fragmentShader.replace( 'uniform float metalness;', '' )
+				// }
+				// var fragmentShader = shader.fragmentShader
+				// 	.replace( 'uniform float roughness;', 'uniform vec3 specular;' )
+				// 	.replace( 'uniform float metalness;', 'uniform float glossiness;' )
+				// 	.replace( '#include <roughnessmap_pars_fragment>', specularMapParsFragmentChunk )
+				// 	.replace( '#include <metalnessmap_pars_fragment>', glossinessMapParsFragmentChunk )
+				// 	.replace( '#include <roughnessmap_fragment>', specularMapFragmentChunk )
+				// 	.replace( '#include <metalnessmap_fragment>', glossinessMapFragmentChunk )
+				// 	.replace( '#include <lights_physical_fragment>', lightPhysicalFragmentChunk );
 
-				params.vertexShader = shader.vertexShader;
-				params.fragmentShader = fragmentShader;
-				params.uniforms = uniforms;
-				params.defines = { 'STANDARD': '' };
+				// delete uniforms.roughness;
+				// delete uniforms.metalness;
+				// delete uniforms.roughnessMap;
+				// delete uniforms.metalnessMap;
+
+				// uniforms.specular = { value: new THREE.Color().setHex( 0x111111 ) };
+				// uniforms.glossiness = { value: 0.5 };
+				// uniforms.specularMap = { value: null };
+				// uniforms.glossinessMap = { value: null };
+
+				// params.vertexShader = shader.vertexShader;
+				// params.fragmentShader = fragmentShader;
+				// params.uniforms = uniforms;
+				// params.defines = { 'STANDARD': '' };
 
 				params.color = new THREE.Color( 1.0, 1.0, 1.0 );
 				params.opacity = 1.0;
@@ -685,16 +706,23 @@ THREE.GLTFLoader = ( function () {
 
 				// setup material properties based on MeshStandardMaterial for Specular-Glossiness
 
-				var material = new THREE.ShaderMaterial( {
-					defines: params.defines,
-					vertexShader: params.vertexShader,
-					fragmentShader: params.fragmentShader,
-					uniforms: params.uniforms,
+				var material = new THREE.MeshStandardMaterial( {
+				// var material = new THREE.ShaderMaterial({
+					// defines: params.defines,
+					// vertexShader: params.vertexShader,
+					// fragmentShader: params.fragmentShader,
+					// uniforms: params.uniforms,
 					fog: true,
-					lights: true,
+					// lights: true,
 					opacity: params.opacity,
 					transparent: params.transparent
 				} );
+
+				console.log( material );
+
+				material.shaderIncludes = params.shaderIncludes;
+				material.shaderUniforms = params.shaderUniforms;
+				// material.onBeforeCompile = params.onBeforeCompile
 
 				material.isGLTFSpecularGlossinessMaterial = true;
 
@@ -722,11 +750,26 @@ THREE.GLTFLoader = ( function () {
 				material.displacementScale = 1;
 				material.displacementBias = 0;
 
-				material.specularMap = params.specularMap === undefined ? null : params.specularMap;
-				material.specular = params.specular;
+				// material.specularMap = params.specularMap === undefined ? null : params.specularMap;
+				if ( params.specularMap ) {
 
-				material.glossinessMap = params.glossinessMap === undefined ? null : params.glossinessMap;
-				material.glossiness = params.glossiness;
+					material.shaderUniforms.specularMap.value = params.glossinessMap;
+					material.defines.USE_SPECULARMAP = '';
+
+				}
+				// material.specular = params.specular;
+				material.shaderUniforms.specular.value = params.specular;
+
+				// material.glossinessMap = params.glossinessMap === undefined ? null : params.glossinessMap;
+				// material.glossiness = params.glossiness;
+				if ( params.glossinessMap ) {
+
+					material.shaderUniforms.glossinessMap.value = params.glossinessMap;
+					material.defines.USE_GLOSSINESSMAP = '';
+
+				}
+
+				material.shaderUniforms.glossiness.value = params.glossiness;
 
 				material.alphaMap = null;
 
@@ -735,7 +778,7 @@ THREE.GLTFLoader = ( function () {
 
 				material.refractionRatio = 0.98;
 
-				material.extensions.derivatives = true;
+				// material.extensions.derivatives = true;
 
 				return material;
 
@@ -780,6 +823,8 @@ THREE.GLTFLoader = ( function () {
 
 				}
 
+				console.log( 'foo' );
+				return;
 				var uniforms = material.uniforms;
 				var defines = material.defines;
 
@@ -934,7 +979,7 @@ THREE.GLTFLoader = ( function () {
 
 		THREE.Interpolant.call( this, parameterPositions, sampleValues, sampleSize, resultBuffer );
 
-	};
+	}
 
 	GLTFCubicSplineInterpolant.prototype = Object.create( THREE.Interpolant.prototype );
 	GLTFCubicSplineInterpolant.prototype.constructor = GLTFCubicSplineInterpolant;
@@ -966,10 +1011,10 @@ THREE.GLTFLoader = ( function () {
 		//   [ inTangent_1, splineVertex_1, outTangent_1, inTangent_2, splineVertex_2, ... ]
 		for ( var i = 0; i !== stride; i ++ ) {
 
-			var p0 = values[ offset0 + i + stride ];        // splineVertex_k
-			var m0 = values[ offset0 + i + stride2 ] * td;  // outTangent_k * (t_k+1 - t_k)
-			var p1 = values[ offset1 + i + stride ];        // splineVertex_k+1
-			var m1 = values[ offset1 + i ] * td;            // inTangent_k+1 * (t_k+1 - t_k)
+			var p0 = values[ offset0 + i + stride ]; // splineVertex_k
+			var m0 = values[ offset0 + i + stride2 ] * td; // outTangent_k * (t_k+1 - t_k)
+			var p1 = values[ offset1 + i + stride ]; // splineVertex_k+1
+			var m1 = values[ offset1 + i ] * td; // inTangent_k+1 * (t_k+1 - t_k)
 
 			result[ i ] = s0 * p0 + s1 * m0 + s2 * p1 + s3 * m1;
 
@@ -1123,7 +1168,7 @@ THREE.GLTFLoader = ( function () {
 		WEIGHT: 'skinWeight', // deprecated
 		JOINTS_0: 'skinIndex',
 		JOINT: 'skinIndex' // deprecated
-	}
+	};
 
 	var PATH_PROPERTIES = {
 		scale: 'scale',
@@ -1533,7 +1578,7 @@ THREE.GLTFLoader = ( function () {
 		// BufferGeometry caching
 		this.primitiveCache = [];
 		this.multiplePrimitivesCache = [];
-		this.multiPassGeometryCache = []
+		this.multiPassGeometryCache = [];
 
 		this.textureLoader = new THREE.TextureLoader( this.options.manager );
 		this.textureLoader.setCrossOrigin( this.options.crossOrigin );
@@ -2178,7 +2223,7 @@ THREE.GLTFLoader = ( function () {
 
 		}
 
-		if ( materialDef.normalTexture !== undefined && materialType !== THREE.MeshBasicMaterial) {
+		if ( materialDef.normalTexture !== undefined && materialType !== THREE.MeshBasicMaterial ) {
 
 			pending.push( parser.assignTexture( materialParams, 'normalMap', materialDef.normalTexture.index ) );
 
@@ -2192,7 +2237,7 @@ THREE.GLTFLoader = ( function () {
 
 		}
 
-		if ( materialDef.occlusionTexture !== undefined && materialType !== THREE.MeshBasicMaterial) {
+		if ( materialDef.occlusionTexture !== undefined && materialType !== THREE.MeshBasicMaterial ) {
 
 			pending.push( parser.assignTexture( materialParams, 'aoMap', materialDef.occlusionTexture.index ) );
 
@@ -2204,13 +2249,13 @@ THREE.GLTFLoader = ( function () {
 
 		}
 
-		if ( materialDef.emissiveFactor !== undefined && materialType !== THREE.MeshBasicMaterial) {
+		if ( materialDef.emissiveFactor !== undefined && materialType !== THREE.MeshBasicMaterial ) {
 
 			materialParams.emissive = new THREE.Color().fromArray( materialDef.emissiveFactor );
 
 		}
 
-		if ( materialDef.emissiveTexture !== undefined && materialType !== THREE.MeshBasicMaterial) {
+		if ( materialDef.emissiveTexture !== undefined && materialType !== THREE.MeshBasicMaterial ) {
 
 			pending.push( parser.assignTexture( materialParams, 'emissiveMap', materialDef.emissiveTexture.index ) );
 
@@ -2219,8 +2264,8 @@ THREE.GLTFLoader = ( function () {
 		return Promise.all( pending ).then( function () {
 
 			var material;
-
-			if ( materialType === THREE.ShaderMaterial ) {
+			// if ( materialType === THREE.ShaderMaterial ) {
+			if ( materialType === 'SPEC_GLOSS' ) {
 
 				material = extensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ].createMaterial( materialParams );
 
@@ -2269,7 +2314,7 @@ THREE.GLTFLoader = ( function () {
 			var bufferAttribute = accessors[ attributes[ gltfAttributeName ] ];
 
 			// Skip attributes already provided by e.g. Draco extension.
-			if ( !threeAttributeName ) continue;
+			if ( ! threeAttributeName ) continue;
 			if ( threeAttributeName in geometry.attributes ) continue;
 
 			geometry.addAttribute( threeAttributeName, bufferAttribute );
@@ -2507,7 +2552,7 @@ THREE.GLTFLoader = ( function () {
 
 					var mesh;
 
-					var material = isMultiMaterial ? originalMaterials : originalMaterials[ i ]
+					var material = isMultiMaterial ? originalMaterials : originalMaterials[ i ];
 
 					if ( primitive.mode === WEBGL_CONSTANTS.TRIANGLES ||
 						primitive.mode === WEBGL_CONSTANTS.TRIANGLE_STRIP ||
@@ -2591,7 +2636,7 @@ THREE.GLTFLoader = ( function () {
 								THREE.Material.prototype.copy.call( pointsMaterial, material );
 								pointsMaterial.color.copy( material.color );
 								pointsMaterial.map = material.map;
-								pointsMaterial.lights = false;  // PointsMaterial doesn't support lights yet
+								pointsMaterial.lights = false; // PointsMaterial doesn't support lights yet
 
 								scope.cache.add( cacheKey, pointsMaterial );
 
@@ -2610,7 +2655,7 @@ THREE.GLTFLoader = ( function () {
 								lineMaterial = new THREE.LineBasicMaterial();
 								THREE.Material.prototype.copy.call( lineMaterial, material );
 								lineMaterial.color.copy( material.color );
-								lineMaterial.lights = false;  // LineBasicMaterial doesn't support lights yet
+								lineMaterial.lights = false; // LineBasicMaterial doesn't support lights yet
 
 								scope.cache.add( cacheKey, lineMaterial );
 
@@ -2624,8 +2669,8 @@ THREE.GLTFLoader = ( function () {
 						if ( useVertexColors || useFlatShading || useSkinning || useMorphTargets ) {
 
 							material = material.isGLTFSpecularGlossinessMaterial
-									? extensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ].cloneMaterial( material )
-									: material.clone();
+								? extensions[ EXTENSIONS.KHR_MATERIALS_PBR_SPECULAR_GLOSSINESS ].cloneMaterial( material )
+								: material.clone();
 
 						}
 
