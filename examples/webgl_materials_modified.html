@@ -78,8 +78,7 @@
 				var material = new THREE.MeshNormalMaterial();
 
 				// BEGIN custom shader injection ----
-
-				var myShader = [
+				var myShader = [ //piece of data, could be provided by a package author
 					'float theta = sin( time + position.y ) / 2.0;',
 					'float c = cos( theta );',
 					'float s = sin( theta );',
@@ -89,45 +88,14 @@
 				].join( '\n' );
 
 				material.shaderIncludes = {
-
-					begin_vertex: myShader,
-
-					uv_pars_vertex: THREE.ShaderChunk.uv_pars_vertex + '\nuniform float time;\n'
-
+					begin_vertex: myShader
 				};
 
 				material.shaderUniforms = {
-					time: { value: 0 }  
+					time: { value: 0, type: 'float' }  
 				};
 
-				//OR
-
-				// material.shaderIncludes = {
-
-					// begin_vertex: myShader,
-
-				// };
-
-				// material.shaderUniforms = {
-					// time: { value: 0 , type:'float' } //if type is provided the uniform will be injected automatically  
-				// };
-
 				materialShader = material;
-
-				// material.onBeforeCompile = function ( shader ) {
-
-					// shader.uniforms.time = { value: 0 };
-
-					// shader.vertexShader = 'uniform float time;\n' + shader.vertexShader;
-					
-					// shader.vertexShader = shader.vertexShader.replace(
-					// 	'#include <begin_vertex>',
-					// 	myShader
-					// );
-
-					// materialShader = shader;
-
-				// };
 
 				var loader = new THREE.JSONLoader();
 				loader.load( 'models/json/leeperrysmith/LeePerrySmith.json', function( geometry ) {
