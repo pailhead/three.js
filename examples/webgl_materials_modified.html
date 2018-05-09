@@ -52,9 +52,11 @@
 
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
+			var material
+
 			var camera, scene, renderer, stats;
 
-			var mesh, materialShader;
+			var mesh;
 
 			var mouseX = 0;
 			var mouseY = 0;
@@ -75,7 +77,7 @@
 
 				scene = new THREE.Scene();
 
-				var material = new THREE.MeshNormalMaterial();
+				material = new THREE.MeshNormalMaterial(); //no need to create a uniform at some obscure compile time, it's available now
 
 				// BEGIN custom shader injection ----
 				var myShader = [ //piece of data, could be provided by a package author
@@ -94,8 +96,6 @@
 				material.shaderUniforms = {
 					time: { value: 0, type: 'float' }  
 				};
-
-				materialShader = material;
 
 				var loader = new THREE.JSONLoader();
 				loader.load( 'models/json/leeperrysmith/LeePerrySmith.json', function( geometry ) {
@@ -172,12 +172,8 @@
 
 				}
 
-				if ( materialShader ) {
+				material.shaderUniforms.time.value = performance.now() / 1000; //doesnt defer creating the uniform, no need to check
 
-					// materialShader.uniforms.time.value = performance.now() / 1000;
-					materialShader.shaderUniforms.time.value = performance.now() / 1000;
-
-				}
 
 				renderer.render( scene, camera );
 
