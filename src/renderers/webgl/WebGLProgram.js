@@ -210,7 +210,7 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 
 	var defines = material.defines;
 
-	var materialIncludes = material.shaderIncludes; //custom chunks 
+	var materialIncludes = material.shaderIncludes; //custom chunks
 
 	var vertexShader = shader.vertexShader;
 	var fragmentShader = shader.fragmentShader;
@@ -514,14 +514,6 @@ function WebGLProgram( renderer, extensions, code, material, shader, parameters 
 	vertexShader = parseIncludes( vertexShader, customIncludes );
 	vertexShader = replaceLightNums( vertexShader, parameters );
 	vertexShader = replaceClippingPlaneNums( vertexShader, parameters );
-
-<<<<<<< HEAD
-=======
-	fragmentShader = parseIncludes( fragmentShader, customIncludes );
-	fragmentShader = replaceLightNums( fragmentShader, parameters );
-
-	if ( ! material.isShaderMaterial ) {
->>>>>>> f66ce12654b4b9c3b0db09dba996a7d75fbac870
 
 	fragmentShader = parseIncludes( fragmentShader, customIncludes );
 	fragmentShader = replaceLightNums( fragmentShader, parameters );
