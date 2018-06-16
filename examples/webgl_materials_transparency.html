@@ -85,13 +85,6 @@
 					material2.map = map;
 					material2.needsUpdate = true;
 
-					material1.onBeforeCompile = shader=>{ shader.fragmentShader = shader.fragmentShader.replace(
-						'#include <map_uv_fragment>', 
-						`#include <map_uv_fragment>
-						mapLookup *= 2.;
-						`
-					)}
-
 				} );
 
 				var textureLoader = new THREE.TextureLoader();

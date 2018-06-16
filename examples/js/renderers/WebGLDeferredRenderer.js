@@ -114,7 +114,7 @@ THREE.WebGLDeferredRenderer = function ( parameters ) {
 	this.renderer = undefined;
 	this.domElement = undefined;
 
-	this.forwardRendering = false; // for debug
+	this.forwardRendering = false;  // for debug
 
 	// private methods
 
@@ -1176,7 +1176,7 @@ THREE.WebGLDeferredRenderer = function ( parameters ) {
 
 			if ( cache[ key ].used === false ) {
 
-				cache[ key ].count ++;
+				cache[ key ].count++;
 
 				if ( cache[ key ].keepAlive === false && cache[ key ].count > _removeThresholdCount ) {
 
