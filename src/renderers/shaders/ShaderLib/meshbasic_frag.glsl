@@ -28,8 +28,10 @@ void main() {
 	vec4 diffuseColor = vec4( diffuse, opacity );
 
 	#include <logdepthbuf_fragment>
+	#include <map_uv_fragment> 
 	#include <map_fragment>
 	#include <color_fragment>
+	#include <alphamap_uv_fragment> 
 	#include <alphamap_fragment>
 	#include <alphatest_fragment>
 	#include <specularmap_fragment>

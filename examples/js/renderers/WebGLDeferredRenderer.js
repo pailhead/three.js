@@ -114,7 +114,7 @@ THREE.WebGLDeferredRenderer = function ( parameters ) {
 	this.renderer = undefined;
 	this.domElement = undefined;
 
-	this.forwardRendering = false;  // for debug
+	this.forwardRendering = false; // for debug
 
 	// private methods
 
@@ -1176,7 +1176,7 @@ THREE.WebGLDeferredRenderer = function ( parameters ) {
 
 			if ( cache[ key ].used === false ) {
 
-				cache[ key ].count++;
+				cache[ key ].count ++;
 
 				if ( cache[ key ].keepAlive === false && cache[ key ].count > _removeThresholdCount ) {
 
@@ -1802,6 +1802,7 @@ THREE.ShaderDeferred = {
 			"	vec3 emissiveColor = emissive;",
 			"	vec3 specularColor = specular;",
 
+			"#include <map_uv_fragment>",
 			"#include <map_fragment>",
 			THREE.DeferredShaderChunk[ "packColor" ],
 
@@ -2467,6 +2468,7 @@ THREE.ShaderDeferred = {
 
 			"	vec4 light = texture2D( samplerLight, texCoord );",
 
+			"#include <map_uv_fragment>",
 			"#include <map_fragment>",
 
 			"	vec3 diffuseFinal = diffuseColor.rgb * light.rgb;",

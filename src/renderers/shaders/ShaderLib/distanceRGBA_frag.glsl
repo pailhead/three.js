@@ -18,7 +18,9 @@ void main () {
 
 	vec4 diffuseColor = vec4( 1.0 );
 
+	#include <map_uv_fragment> 
 	#include <map_fragment>
+	#include <alphamap_uv_fragment> 
 	#include <alphamap_fragment>
 	#include <alphatest_fragment>
 

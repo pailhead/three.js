@@ -1,4 +1,5 @@
 import alphamap_fragment from './ShaderChunk/alphamap_fragment.glsl';
+import alphamap_uv_fragment from './ShaderChunk/alphamap_uv_fragment.glsl';
 import alphamap_pars_fragment from './ShaderChunk/alphamap_pars_fragment.glsl';
 import alphatest_fragment from './ShaderChunk/alphatest_fragment.glsl';
 import aomap_fragment from './ShaderChunk/aomap_fragment.glsl';
@@ -50,6 +51,7 @@ import logdepthbuf_pars_fragment from './ShaderChunk/logdepthbuf_pars_fragment.g
 import logdepthbuf_pars_vertex from './ShaderChunk/logdepthbuf_pars_vertex.glsl';
 import logdepthbuf_vertex from './ShaderChunk/logdepthbuf_vertex.glsl';
 import map_fragment from './ShaderChunk/map_fragment.glsl';
+import map_uv_fragment from './ShaderChunk/map_uv_fragment.glsl';
 import map_pars_fragment from './ShaderChunk/map_pars_fragment.glsl';
 import map_particle_fragment from './ShaderChunk/map_particle_fragment.glsl';
 import map_particle_pars_fragment from './ShaderChunk/map_particle_pars_fragment.glsl';
@@ -115,6 +117,7 @@ import shadow_vert from './ShaderLib/shadow_vert.glsl';
 
 export var ShaderChunk = {
 	alphamap_fragment: alphamap_fragment,
+	alphamap_uv_fragment: alphamap_uv_fragment,
 	alphamap_pars_fragment: alphamap_pars_fragment,
 	alphatest_fragment: alphatest_fragment,
 	aomap_fragment: aomap_fragment,
@@ -166,6 +169,7 @@ export var ShaderChunk = {
 	logdepthbuf_pars_vertex: logdepthbuf_pars_vertex,
 	logdepthbuf_vertex: logdepthbuf_vertex,
 	map_fragment: map_fragment,
+	map_uv_fragment: map_uv_fragment,
 	map_pars_fragment: map_pars_fragment,
 	map_particle_fragment: map_particle_fragment,
 	map_particle_pars_fragment: map_particle_pars_fragment,
