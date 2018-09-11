@@ -360,6 +360,8 @@
   						instanceColorArray[i*3+c] = object.userData.color[c]
 				})
 
+				instancedGeometry.maxInstancedCount = result.length
+
 				matrixAttributeArray.forEach(attribute=>{
 					attribute.needsUpdate = true
 				})
@@ -394,6 +396,7 @@
 					if ( INTERSECTED != intersects[ 0 ].object ) {
 
 						INTERSECTED = intersects[ 0 ].object;
+
 					}
 
 				} else {
@@ -402,10 +405,13 @@
 
 				}
 
+
 				for ( let i = 0 ; i < result.length ; i ++ ){
+
+					const isHighlight = INTERSECTED && i === map[INTERSECTED.userData.index]
 					setEmissiveAtIndex(
 						i, 
-						INTERSECTED && i ===  map[INTERSECTED.userData.index] ?
+						isHighlight ?
 							red :
 							black
 					)
