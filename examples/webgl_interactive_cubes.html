@@ -18,11 +18,16 @@
 		<script src="../build/three.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
+		<script src="js/InstancedMesh.js"></script>
 
 		<script>
+			/*eslint-disable*/
+			require('instanced-mesh')(THREE) //require this
 
 			var container, stats;
 			var camera, scene, raycaster, renderer;
+
+			var instancedMesh 
 
 			var mouse = new THREE.Vector2(), INTERSECTED;
 			var radius = 100, theta = 0;
@@ -54,23 +59,39 @@
 
 				var geometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
 
-				for ( var i = 0; i < 2000; i ++ ) {
+				var material = new THREE.MeshLambertMaterial()
+				
+				var instanceNum = 2000
 
-					var object = new THREE.Mesh( geometry, new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } ) );
+				instancedMesh = new THREE.InstancedMesh( geometry, material, instanceNum, false, true, false )
 
-					object.position.x = Math.random() * 800 - 400;
-					object.position.y = Math.random() * 800 - 400;
-					object.position.z = Math.random() * 800 - 400;
+				scene.add(instancedMesh)
 
-					object.rotation.x = Math.random() * 2 * Math.PI;
-					object.rotation.y = Math.random() * 2 * Math.PI;
-					object.rotation.z = Math.random() * 2 * Math.PI;
+				var _v3 = new THREE.Vector3()
+				var _q = new THREE.Quaternion()
+				var _e = new THREE.Euler()
 
-					object.scale.x = Math.random() + 0.5;
-					object.scale.y = Math.random() + 0.5;
-					object.scale.z = Math.random() + 0.5;
+				for ( var i = 0; i < instanceNum; i ++ ) {
 
-					scene.add( object );
+					_v3.x = Math.random() * 800 - 400;
+					_v3.y = Math.random() * 800 - 400;
+					_v3.z = Math.random() * 800 - 400;
+
+					instancedMesh.setPositionAt( i , _v3 )
+
+					_e.x = Math.random() * 2 * Math.PI;
+					_e.y = Math.random() * 2 * Math.PI;
+					_e.z = Math.random() * 2 * Math.PI;
+
+					instancedMesh.setQuaternionAt( i , _q.setFromEuler(_e) )
+
+					_v3.x = Math.random() + 0.5;
+					_v3.y = Math.random() + 0.5;
+					_v3.z = Math.random() + 0.5;
+
+					instancedMesh.setScaleAt( i , _v3 )
+
+					instancedMesh.setColorAt( i , new THREE.Color(0xffffff * Math.random()))
 
 				}
 
