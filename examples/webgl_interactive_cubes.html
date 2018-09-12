@@ -67,30 +67,26 @@
 
 				scene.add(instancedMesh)
 
-				var _v3 = new THREE.Vector3()
-				var _q = new THREE.Quaternion()
-				var _e = new THREE.Euler()
-
 				for ( var i = 0; i < instanceNum; i ++ ) {
 
-					_v3.x = Math.random() * 800 - 400;
-					_v3.y = Math.random() * 800 - 400;
-					_v3.z = Math.random() * 800 - 400;
+					var object = new THREE.Object3D()
+					object.position.x = Math.random() * 800 - 400;
+					object.position.y = Math.random() * 800 - 400;
+					object.position.z = Math.random() * 800 - 400;
 
-					instancedMesh.setPositionAt( i , _v3 )
 
-					_e.x = Math.random() * 2 * Math.PI;
-					_e.y = Math.random() * 2 * Math.PI;
-					_e.z = Math.random() * 2 * Math.PI;
+					object.rotation.x = Math.random() * 2 * Math.PI;
+					object.rotation.y = Math.random() * 2 * Math.PI;
+					object.rotation.z = Math.random() * 2 * Math.PI;
 
-					instancedMesh.setQuaternionAt( i , _q.setFromEuler(_e) )
 
-					_v3.x = Math.random() + 0.5;
-					_v3.y = Math.random() + 0.5;
-					_v3.z = Math.random() + 0.5;
+					object.scale.x = Math.random() + 0.5;
+					object.scale.y = Math.random() + 0.5;
+					object.scale.z = Math.random() + 0.5;
 
-					instancedMesh.setScaleAt( i , _v3 )
-
+					instancedMesh.setPositionAt( i , object.position )
+					instancedMesh.setQuaternionAt( i , new THREE.Quaternion().setFromEuler(object.rotation) )
+					instancedMesh.setScaleAt( i , object.scale )
 					instancedMesh.setColorAt( i , new THREE.Color(0xffffff * Math.random()))
 
 				}
