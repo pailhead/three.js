@@ -25,13 +25,10 @@
 			var container, stats;
 			var camera, scene, raycaster, renderer;
 
-
 			//------------------------------------------------------------------
-			//
-			var intersectsScene, matrixArray, instanceColorArray, matrixAttributeArray, instanceColorAttribute, map, result
+			var intersectsScene, matrixArray, instanceColorArray, matrixAttributeArray, instanceColorAttribute
 			const red = [255,0,0]
-			const black = [0,0,0]
-			const COUNT = 700
+			const COUNT = 2000
 
 			const instanceEmissiveArray = new Uint8Array(2000*3)
 			const emissiveAttribute = new THREE.InstancedBufferAttribute( instanceEmissiveArray, 3, true )
@@ -49,32 +46,6 @@
 					res.push(instanceEmissiveArray[index*3 + i])
 				}
 				return res
-			}
-			
-			const _vector3 = new THREE.Vector3()
-			const _projScreenMatrix = new THREE.Matrix4()
-			const _frustum = new THREE.Frustum()
-
-			function customProjectObject(list){
-
-				return function _customProjectObject(object){
-
-					if( object.isMesh)
-					if ( _frustum.intersectsObject( object ) ) {
-
-						_vector3.setFromMatrixPosition( object.matrixWorld )
-							.applyMatrix4( _projScreenMatrix );
-
-						list.push({z:_vector3.z, index: object.userData.index})
-
-					}
-
-					var children = object.children;
-
-					for ( var i = 0, l = children.length; i < l; i ++ ) {
-						_customProjectObject( children[ i ])
-					}
-				}
 			}
 
 			//------------------------------------------------------------------
@@ -124,10 +95,10 @@
 				instancedGeometry.index = geometry.index
 
 				//we define the size of the buffer
-				instancedGeometry.maxInstancedCount = 2000
+				instancedGeometry.maxInstancedCount = COUNT
 
 				//store this in a structure for easier access
-				const matArraySize = 2000 * 4
+				const matArraySize = COUNT * 4
 				matrixArray = [
 					new Float32Array(matArraySize),
 					new Float32Array(matArraySize),
@@ -165,9 +136,9 @@
 				intersectsScene = new THREE.Scene()
 
 				//populate entire set
-				for ( var i = 0; i < 2000; i ++ ) {
+				for ( var i = 0; i < COUNT; i ++ ) {
 
-					var object = new THREE.Mesh(geometry)
+					var object = new THREE.Mesh(geometry) 
 
 					object.userData.index = i //keep for mapping to attribute
 
@@ -285,12 +256,13 @@
 					
 				}
 
-				//we insert another node, because thats how the API works
+				//we have to add another node (Mesh), because thats how the API works, 
 				scene.add(new THREE.Mesh(
 					instancedGeometry,
 					instanceMaterial
 				))
 				//------------------------------------------------------------------
+				
 				//
 				raycaster = new THREE.Raycaster();
 
@@ -333,40 +305,6 @@
 			function animate() {
 
 				requestAnimationFrame( animate );
-
-				//------------------------------------------------------------------
-				_projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse )
-				_frustum.setFromMatrix( _projScreenMatrix )
-
-				result = []
-
-				map = {}
-
-				customProjectObject(result)(intersectsScene)
-
-				result.sort((a,b)=>(a.z-b.z))
-
-				result.forEach((r,i)=>{
-					map[r.index] = i
-					const {index} = r
-					const object = intersectsScene.children[index]
-					const matrix = object.matrixWorld
-
-					for ( let r = 0 ; r < 4 ; r ++ )
-  					for ( let c = 0 ; c < 4 ; c ++ )
-    					matrixArray[r][i*4 + c] = matrix.elements[r*4 + c]
-					
-  					for( let c = 0 ; c < 3 ; c ++ )
-  						instanceColorArray[i*3+c] = object.userData.color[c]
-				})
-
-				instancedGeometry.maxInstancedCount = result.length
-
-				matrixAttributeArray.forEach(attribute=>{
-					attribute.needsUpdate = true
-				})
-				instanceColorAttribute.needsUpdate = true
-				//------------------------------------------------------------------
 				
 				render();
 				stats.update();
@@ -395,31 +333,36 @@
 
 					if ( INTERSECTED != intersects[ 0 ].object ) {
 
+						if ( INTERSECTED ) 
+							setEmissiveAtIndex(
+							  INTERSECTED.userData.index, 
+							  INTERSECTED.currentColorArray 
+							)
+
 						INTERSECTED = intersects[ 0 ].object;
+						INTERSECTED.currentColorArray = getEmissiveAtIndex(INTERSECTED.userData.index)
+						setEmissiveAtIndex(
+						  	INTERSECTED.userData.index, 
+						  	red
+						)
 
 					}
 
 				} else {
 
-					INTERSECTED = null;
-
-				}
-
-
-				for ( let i = 0 ; i < result.length ; i ++ ){
-
-					const isHighlight = INTERSECTED && i === map[INTERSECTED.userData.index]
-					setEmissiveAtIndex(
-						i, 
-						isHighlight ?
-							red :
-							black
+					if ( INTERSECTED ) setEmissiveAtIndex(
+						INTERSECTED.userData.index, 
+						INTERSECTED.currentColorArray 
 					)
+					
+					INTERSECTED = null;
+					
 				}
-				emissiveAttribute.needsUpdate = true
+
 
 				//------------------------------------------------------------------
 				
+				// console.log(renderer.info.render.calls)
 				renderer.render( scene, camera );
 
 			}
