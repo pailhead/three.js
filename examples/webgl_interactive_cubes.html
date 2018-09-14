@@ -28,9 +28,9 @@
 			//------------------------------------------------------------------
 			var intersectsScene, matrixArray, instanceColorArray, matrixAttributeArray, instanceColorAttribute
 			const red = [255,0,0]
-			const COUNT = 2000
+			const COUNT = 1<<16
 
-			const instanceEmissiveArray = new Uint8Array(2000*3)
+			const instanceEmissiveArray = new Uint8Array(COUNT*3)
 			const emissiveAttribute = new THREE.InstancedBufferAttribute( instanceEmissiveArray, 3, true )
 			emissiveAttribute.dynamic = true
 
@@ -79,7 +79,7 @@
 				light.position.set( 1, 1, 1 ).normalize();
 				scene.add( light );
 
-				var geometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
+				var geometry = new THREE.BoxBufferGeometry( 2, 2, 2 );
 
 
 				//------------------------------------------------------------------
@@ -120,7 +120,7 @@
 				    )
 				}
 
-				instanceColorArray = new Uint8Array(2000*3)
+				instanceColorArray = new Uint8Array(COUNT*3)
 				instanceColorAttribute = new THREE.InstancedBufferAttribute( instanceColorArray, 3, true )
 				instancedGeometry.addAttribute(
 				  'aInstanceColor',
