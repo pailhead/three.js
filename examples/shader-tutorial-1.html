@@ -87,9 +87,23 @@
 
 				// TUTORIAL CODE 
 
-				const planeGeometry = new THREE.PlaneBufferGeometry(2,2,1,1)
+				// const planeGeometry = new THREE.PlaneBufferGeometry(2,2,1,1)
+				const geometry = new THREE.BufferGeometry()
+				const positionData = [
+					0,0,0,
+					1,0,0,
+					0,1,0
+				]
+				const positionArray = new Float32Array(positionData)
+				const positionAttribute = new THREE.BufferAttribute(
+				    positionArray, // array: the actual data we are wrapping
+				    3,             // itemSize: size of an element
+				    false          // normalized: this should be true for color
+				)
+				geometry.addAttribute('position', positionAttribute)
+
 				const material = new THREE.MeshBasicMaterial()
-				const plane = new THREE.Mesh(planeGeometry, material)
+				const plane = new THREE.Mesh(geometry, material)
 
 				scene.add(plane)
 				camera.position.set(10,10,10)
