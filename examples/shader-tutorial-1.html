@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js shader tutorials </title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body {
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+
+			#info {
+				position: absolute;
+				top: 0px; width: 100%;
+				color: #ffffff;
+				padding: 5px;
+				font-family: Monospace;
+				font-size: 13px;
+				text-align: center;
+			}
+
+			a {
+				color: #ff0080;
+				text-decoration: none;
+			}
+
+			a:hover {
+				color: #0080ff;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="container"></div>
+		
+		<script src="../build/three.js"></script>
+		<script src="js/controls/OrbitControls.js"></script>
+		<script src="js/libs/dat.gui.min.js"></script>
+		<script src="js/libs/stats.min.js"></script>
+		<script src="js/Detector.js"></script>
+
+		<script>
+			/*eslint-disable*/
+			var container = document.getElementById( 'container' );
+
+			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+
+			var renderer, scene, camera;
+
+
+			var param = {};
+			var stats;
+
+			init();
+			animate();
+
+			function init() {
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+				document.body.appendChild( renderer.domElement );
+
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 1000 );
+				camera.position.set( 0, 20, 35 );
+
+				scene = new THREE.Scene();
+
+				var controls = new THREE.OrbitControls( camera, renderer.domElement );
+				controls.update();
+
+				// GUI
+
+				var gui = new dat.GUI( { width: 300 } );
+				gui.open();
+
+
+				window.addEventListener( 'resize', onResize, false );
+
+				stats = new Stats();
+				document.body.appendChild( stats.dom );
+
+				// TUTORIAL CODE 
+
+				const planeGeometry = new THREE.PlaneBufferGeometry(2,2,1,1)
+				const material = new THREE.MeshBasicMaterial()
+				const plane = new THREE.Mesh(planeGeometry, material)
+
+				scene.add(plane)
+				camera.position.set(10,10,10)
+				camera.lookAt(plane.position)
+
+
+			}
+
+			function onResize() {
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				camera.aspect = ( window.innerWidth / window.innerHeight );
+				camera.updateProjectionMatrix();
+
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				renderer.render( scene, camera );
+
+				stats.update();
+
+			}
+
+		</script>
+	</body>
+</html>
