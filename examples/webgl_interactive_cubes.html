@@ -25,6 +25,26 @@
 			var container, stats;
 			var camera, scene, raycaster, renderer;
 
+
+			camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+			var helper = new THREE.CameraHelper( camera );
+			const cameraDebug = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
+			cameraDebug.position.set(1000,1000,600)
+			cameraDebug.lookAt(new THREE.Vector3())
+			let toggleCamera = true 
+
+			function _keydown(e){
+				console.log(e.keyCode)
+				switch ( e.keyCode ) {
+					case 87: 
+						toggleCamera = !toggleCamera
+					break;
+				}
+
+			}
+
+			window.addEventListener( 'keydown', _keydown, false );
+
 			//------------------------------------------------------------------
 			var intersectsScene, matrixArray, instanceColorArray, matrixAttributeArray, instanceColorAttribute
 			const red = [255,0,0]
@@ -58,7 +78,7 @@
 					if ( object.isMesh && _frustum.intersectsObject( object ) ) {
 						_vector3.setFromMatrixPosition( object.matrixWorld )
 						     .applyMatrix4( _projScreenMatrix );
-						list.push({z:_vector3.z, index: object.userData.index})
+						list.push({z:_vector3.z, object})
 					}
 					var children = object.children;
 					for ( var i = 0, l = children.length; i < l; i ++ ) {
@@ -89,8 +109,6 @@
 				info.innerHTML = '<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive cubes';
 				container.appendChild( info );
 
-				camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
-
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0xf0f0f0 );
 
@@ -98,7 +116,9 @@
 				light.position.set( 1, 1, 1 ).normalize();
 				scene.add( light );
 
-				var geometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
+				var geometry = new THREE.BoxBufferGeometry( 5, 5, 5 );
+
+				scene.add( helper );
 
 				//-----------------------------------------------------------
 				//culling logic
@@ -113,6 +133,8 @@
 				const cullGeometry = new THREE.BoxBufferGeometry(cellSize,cellSize,cellSize,1,1,1)
 				cullGeometry.computeBoundingSphere()
 
+				const instanceMaterial = new THREE.MeshLambertMaterial()
+
 				for( let i = 0 ; i < cellCount ; i ++ )
 				for( let j = 0 ; j < cellCount ; j ++ )
 				for( let k = 0 ; k < cellCount ; k ++ ){
@@ -122,109 +144,117 @@
 					const z = (k + 0.5) / cellCount * 2 - 1 
 
 					const cullNode = new THREE.Mesh(cullGeometry)
+					const renderNode = new THREE.Mesh(cullGeometry)
 
 					cullNode.position.set(x,y,z).multiplyScalar( 400 )
+					renderNode.position.set(x,y,z).multiplyScalar( 400 )
 
 					intersectsScene.add(cullNode)
+					scene.add(renderNode)
 
-				}
-
-
-				//------------------------------------------------------------------
-				var instancedGeometry = new THREE.InstancedBufferGeometry() //this is going to wrap both geometry and a bit of the scene graph
-				window.instancedGeometry = instancedGeometry //expose it
-				
-				//we have to copy the meat - geometry into this wrapper
-				Object.keys(geometry.attributes).forEach(attributeName=>{
-				  instancedGeometry.attributes[attributeName] = geometry.attributes[attributeName]
-				})
-
-				//along with the index
-				instancedGeometry.index = geometry.index
-
-				//we define the size of the buffer
-				instancedGeometry.maxInstancedCount = COUNT
-
-				//store this in a structure for easier access
-				const matArraySize = COUNT * 4
-				matrixArray = [
-					new Float32Array(matArraySize),
-					new Float32Array(matArraySize),
-					new Float32Array(matArraySize),
-					new Float32Array(matArraySize),
-				]
-				matrixAttributeArray = [] //same for later access
-
-				//add attributes to geometry
-				for( let i = 0 ; i < matrixArray.length ; i ++ ){
-					const attribute = new THREE.InstancedBufferAttribute( matrixArray[i], 4 ) 
-					attribute.dynamic = true
-
-					matrixAttributeArray.push(attribute)
-
-				    instancedGeometry.addAttribute( 
-				      `aInstanceMatrix${i}`, 
-				      attribute
-				    )
-				}
-
-				instanceColorArray = new Uint8Array(2000*3)
-				instanceColorAttribute = new THREE.InstancedBufferAttribute( instanceColorArray, 3, true )
-				instancedGeometry.addAttribute(
-				  'aInstanceColor',
-				  instanceColorAttribute
-				)
-
-				instancedGeometry.addAttribute(
-				  'aInstanceEmissive',
-				  emissiveAttribute
-				)
-
-
-				//populate entire set
-				for ( var i = 0; i < COUNT; i ++ ) {
-
-					var object = new THREE.Mesh(geometry) 
-
-					object.userData.index = i //keep for mapping to attribute
-
-					const color = new THREE.Color(Math.random() * 0xffffff)
-
+					cullNode.userData.renderNode = renderNode
+					// console.log(intersectsScene)
+					continue
 					//------------------------------------------------------------------
-					object.position.x = Math.random() * 800 - 400;
-					object.position.y = Math.random() * 800 - 400;
-					object.position.z = Math.random() * 800 - 400;
-
-					object.rotation.x = Math.random() * 2 * Math.PI;
-					object.rotation.y = Math.random() * 2 * Math.PI;
-					object.rotation.z = Math.random() * 2 * Math.PI;
-
-					object.scale.x = Math.random() + 0.5;
-					object.scale.y = Math.random() + 0.5;
-					object.scale.z = Math.random() + 0.5;
-
-					//------------------------------------------------------------------
-					// intersectsScene.add( object );
+					var instancedGeometry = new THREE.InstancedBufferGeometry() //this is going to wrap both geometry and a bit of the scene graph
+					window.instancedGeometry = instancedGeometry //expose it
 					
-					// object.updateMatrixWorld()
+					//we have to copy the meat - geometry into this wrapper
+					Object.keys(geometry.attributes).forEach(attributeName=>{
+					  instancedGeometry.attributes[attributeName] = geometry.attributes[attributeName]
+					})
 
-					//refactor this
-					for ( let r = 0 ; r < 4 ; r ++ )
-  					for ( let c = 0 ; c < 4 ; c ++ )
-    					matrixArray[r][i*4 + c] = object.matrixWorld.elements[r*4 + c] //fetch matrix value
-  					
-  					const colorArray = color.toArray().map(c=>Math.floor(c*255)) //remap color once
+					//along with the index
+					instancedGeometry.index = geometry.index
 
-					object.userData.color = colorArray //store on graph
+					//we define the size of the buffer
+					instancedGeometry.maxInstancedCount = COUNT
 
-  					for( let c = 0 ; c < 3 ; c ++ ){
-  						instanceColorArray[i*3+c] = colorArray[c]
-  					}
+					//store this in a structure for easier access
+					const matArraySize = COUNT * 4
+					matrixArray = [
+						new Float32Array(matArraySize),
+						new Float32Array(matArraySize),
+						new Float32Array(matArraySize),
+						new Float32Array(matArraySize),
+					]
+					matrixAttributeArray = [] //same for later access
+
+					//add attributes to geometry
+					for( let i = 0 ; i < matrixArray.length ; i ++ ){
+						const attribute = new THREE.InstancedBufferAttribute( matrixArray[i], 4 ) 
+						attribute.dynamic = true
+
+						matrixAttributeArray.push(attribute)
+
+					    instancedGeometry.addAttribute( 
+					      `aInstanceMatrix${i}`, 
+					      attribute
+					    )
+					}
+
+					instanceColorArray = new Uint8Array(2000*3)
+					instanceColorAttribute = new THREE.InstancedBufferAttribute( instanceColorArray, 3, true )
+					instancedGeometry.addAttribute(
+					  'aInstanceColor',
+					  instanceColorAttribute
+					)
+
+					instancedGeometry.addAttribute(
+					  'aInstanceEmissive',
+					  emissiveAttribute
+					)
+
+					const position = new THREE.Vector3()
+
+					//populate entire set
+					for ( var n = 0; n < COUNT; n ++ ) {
+
+						var object = new THREE.Mesh(geometry) 
+
+						object.userData.index = n //keep for mapping to attribute
+
+						const color = new THREE.Color(Math.random() * 0xffffff)
+
+						//------------------------------------------------------------------
+						object.position.x = Math.random() * 800 - 400;
+						object.position.y = Math.random() * 800 - 400;
+						object.position.z = Math.random() * 800 - 400;
+
+						object.rotation.x = Math.random() * 2 * Math.PI;
+						object.rotation.y = Math.random() * 2 * Math.PI;
+						object.rotation.z = Math.random() * 2 * Math.PI;
+
+						object.scale.x = Math.random() + 0.5;
+						object.scale.y = Math.random() + 0.5;
+						object.scale.z = Math.random() + 0.5;
+
+						//------------------------------------------------------------------
+						// intersectsScene.add( object );
+						
+						object.updateMatrixWorld()
+
+						//refactor this
+						for ( let r = 0 ; r < 4 ; r ++ )
+	  					for ( let c = 0 ; c < 4 ; c ++ )
+	    					matrixArray[r][n*4 + c] = object.matrixWorld.elements[r*4 + c] //fetch matrix value
+	  					
+	  					const colorArray = color.toArray().map(c=>Math.floor(c*255)) //remap color once
+
+						object.userData.color = colorArray //store on graph
+
+	  					for( let c = 0 ; c < 3 ; c ++ ){
+	  						instanceColorArray[n*3+c] = colorArray[c]
+	  					}
+					}
+  			// 		scene.add(new THREE.Mesh(
+					// 	instancedGeometry,
+					// 	instanceMaterial
+					// ))
 				}
 
 				intersectsScene.updateMatrixWorld(true) //without render, needed to compute matrices
 
-				const instanceMaterial = new THREE.MeshLambertMaterial()
 
 				//gnarly shader modification:
 				instanceMaterial.onBeforeCompile = shader=>{
@@ -302,11 +332,6 @@
 					
 				}
 
-				//we have to add another node (Mesh), because thats how the API works, 
-				// scene.add(new THREE.Mesh(
-				// 	instancedGeometry,
-				// 	instanceMaterial
-				// ))
 				//------------------------------------------------------------------
 				
 				//
@@ -358,8 +383,10 @@
 				map = {}
 				customProjectObject(result)(intersectsScene)
 				result.sort((a,b)=>(a.z-b.z))
-				console.log(result.length)
 
+				// console.log('culled',result.length)
+				intersectsScene.children.forEach(c=>c.userData.renderNode.visible=false)
+				result.forEach(res=>res.object.userData.renderNode.visible=true)
 				render();
 				stats.update();
 
@@ -415,8 +442,8 @@
 
 
 				//------------------------------------------------------------------
-				
-				renderer.render( scene, camera );
+				console.log(renderer.info.render.calls)
+				renderer.render( scene, toggleCamera ? camera : cameraDebug );
 
 			}
 
