@@ -34,11 +34,17 @@
 			cameraDebug.lookAt(new THREE.Vector3())
 			let toggleCamera = true 
 
+			let toggleInstances = false
+
 			function _keydown(e){
 				console.log(e.keyCode)
 				switch ( e.keyCode ) {
 					case 32: 
 						toggleCamera = !toggleCamera
+					break;
+
+					case 87: 
+						toggleInstances = !toggleInstances
 					break;
 				}
 
@@ -124,7 +130,6 @@
 				light.position.set( 1, 1, 1 ).normalize();
 				scene.add( light );
 
-				var geometry = new THREE.BoxBufferGeometry( 5, 5, 5 );
 
 				scene.add( helper );
 
@@ -141,6 +146,9 @@
 				const cullGeometry = new THREE.BoxBufferGeometry(cellSize,cellSize,cellSize,1,1,1)
 				cullGeometry.computeBoundingSphere()
 
+
+				var geometry = new THREE.BoxBufferGeometry( cellSize/20, cellSize/20, cellSize/20 );
+
 				const instanceMaterial = new THREE.MeshLambertMaterial()
 
 				for( let i = 0 ; i < cellCount ; i ++ )
@@ -153,6 +161,7 @@
 
 					const cullNode = new THREE.Mesh(cullGeometry)
 					const renderNode = new THREE.Mesh(cullGeometry)
+					renderNode.visible = false
 
 					cullNode.position.set(x,y,z).multiplyScalar( 400 )
 					renderNode.position.set(x,y,z).multiplyScalar( 400 )
@@ -162,11 +171,21 @@
 
 					cullNode.userData.renderNode = renderNode
 					// console.log(intersectsScene)
-					continue
+					// continue
+					
 					//------------------------------------------------------------------
 					var instancedGeometry = new THREE.InstancedBufferGeometry() //this is going to wrap both geometry and a bit of the scene graph
 					window.instancedGeometry = instancedGeometry //expose it
-					
+					const instancedMeshWrapper = new THREE.Mesh(
+						instancedGeometry,
+						instanceMaterial
+					)
+					instancedMeshWrapper.visible = false
+					instancedMeshWrapper.position.copy(renderNode.position)
+  					scene.add(instancedMeshWrapper)
+  					cullNode.userData.instanceNode = instancedMeshWrapper
+
+					const count  = COUNT / 2000
 					//we have to copy the meat - geometry into this wrapper
 					Object.keys(geometry.attributes).forEach(attributeName=>{
 					  instancedGeometry.attributes[attributeName] = geometry.attributes[attributeName]
@@ -176,10 +195,10 @@
 					instancedGeometry.index = geometry.index
 
 					//we define the size of the buffer
-					instancedGeometry.maxInstancedCount = COUNT
+					instancedGeometry.maxInstancedCount = count
 
 					//store this in a structure for easier access
-					const matArraySize = COUNT * 4
+					const matArraySize = count * 4
 					matrixArray = [
 						new Float32Array(matArraySize),
 						new Float32Array(matArraySize),
@@ -201,7 +220,7 @@
 					    )
 					}
 
-					instanceColorArray = new Uint8Array(2000*3)
+					instanceColorArray = new Uint8Array(count*3)
 					instanceColorAttribute = new THREE.InstancedBufferAttribute( instanceColorArray, 3, true )
 					instancedGeometry.addAttribute(
 					  'aInstanceColor',
@@ -215,19 +234,22 @@
 
 					const position = new THREE.Vector3()
 
+					const color = new THREE.Color(Math.random() * 0xffffff)
+
 					//populate entire set
-					for ( var n = 0; n < COUNT; n ++ ) {
+					for ( var n = 0; n < count ; n ++ ) {
 
 						var object = new THREE.Mesh(geometry) 
 
 						object.userData.index = n //keep for mapping to attribute
 
-						const color = new THREE.Color(Math.random() * 0xffffff)
 
 						//------------------------------------------------------------------
-						object.position.x = Math.random() * 800 - 400;
-						object.position.y = Math.random() * 800 - 400;
-						object.position.z = Math.random() * 800 - 400;
+						object.position.x = Math.random() * 2 - 1;
+						object.position.y = Math.random() * 2 - 1;
+						object.position.z = Math.random() * 2 - 1;
+
+						object.position.multiplyScalar(cellSize/2)
 
 						object.rotation.x = Math.random() * 2 * Math.PI;
 						object.rotation.y = Math.random() * 2 * Math.PI;
@@ -255,10 +277,6 @@
 	  						instanceColorArray[n*3+c] = colorArray[c]
 	  					}
 					}
-  			// 		scene.add(new THREE.Mesh(
-					// 	instancedGeometry,
-					// 	instanceMaterial
-					// ))
 				}
 
 				intersectsScene.updateMatrixWorld(true) //without render, needed to compute matrices
@@ -395,8 +413,15 @@
 				result.sort((a,b)=>(a.z-b.z))
 
 				// console.log('culled',result.length)
-				intersectsScene.children.forEach(c=>c.userData.renderNode.visible=false)
-				result.forEach(res=>res.object.userData.renderNode.visible=true)
+				const showInstances = toggleInstances ? 'instanceNode' : 'renderNode'
+				const showOther = !toggleInstances ? 'instanceNode' : 'renderNode'
+
+				intersectsScene.children.forEach(c=>{
+					c.userData[showInstances].visible=false
+					c.userData[showOther].visible=false
+				})
+
+				result.forEach(res=>res.object.userData[showInstances].visible=true)
 				render();
 				stats.update();
 
