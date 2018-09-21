@@ -50,6 +50,25 @@
 
 			//------------------------------------------------------------------
 
+			const _vector3 = new THREE.Vector3()
+			const _projScreenMatrix = new THREE.Matrix4()
+			const _frustum = new THREE.Frustum()
+			function customProjectObject(list){
+				return function _customProjectObject(object){
+					if ( object.isMesh && _frustum.intersectsObject( object ) ) {
+						_vector3.setFromMatrixPosition( object.matrixWorld )
+						     .applyMatrix4( _projScreenMatrix );
+						list.push({z:_vector3.z, index: object.userData.index})
+					}
+					var children = object.children;
+					for ( var i = 0, l = children.length; i < l; i ++ ) {
+					    _customProjectObject( children[ i ])
+					}
+				}
+			}
+
+			//------------------------------------------------------------------
+
 			var mouse = new THREE.Vector2(), INTERSECTED;
 			var radius = 100, theta = 0;
 			const identity = new THREE.Matrix4()
@@ -80,6 +99,35 @@
 				scene.add( light );
 
 				var geometry = new THREE.BoxBufferGeometry( 20, 20, 20 );
+
+				//-----------------------------------------------------------
+				//culling logic
+				
+				//dummy scene
+				intersectsScene = new THREE.Scene()
+
+				const cellCount = Math.ceil(Math.pow(COUNT,1/3))
+				const boxSize = 800
+				const cellSize = boxSize / cellCount
+
+				const cullGeometry = new THREE.BoxBufferGeometry(cellSize,cellSize,cellSize,1,1,1)
+				cullGeometry.computeBoundingSphere()
+
+				for( let i = 0 ; i < cellCount ; i ++ )
+				for( let j = 0 ; j < cellCount ; j ++ )
+				for( let k = 0 ; k < cellCount ; k ++ ){
+
+					const x = (i + 0.5) / cellCount * 2 - 1
+					const y = (j + 0.5) / cellCount * 2 - 1
+					const z = (k + 0.5) / cellCount * 2 - 1 
+
+					const cullNode = new THREE.Mesh(cullGeometry)
+
+					cullNode.position.set(x,y,z).multiplyScalar( 400 )
+
+					intersectsScene.add(cullNode)
+
+				}
 
 
 				//------------------------------------------------------------------
@@ -132,8 +180,6 @@
 				  emissiveAttribute
 				)
 
-				//dummy scene
-				intersectsScene = new THREE.Scene()
 
 				//populate entire set
 				for ( var i = 0; i < COUNT; i ++ ) {
@@ -158,9 +204,9 @@
 					object.scale.z = Math.random() + 0.5;
 
 					//------------------------------------------------------------------
-					intersectsScene.add( object );
+					// intersectsScene.add( object );
 					
-					object.updateMatrixWorld()
+					// object.updateMatrixWorld()
 
 					//refactor this
 					for ( let r = 0 ; r < 4 ; r ++ )
@@ -257,10 +303,10 @@
 				}
 
 				//we have to add another node (Mesh), because thats how the API works, 
-				scene.add(new THREE.Mesh(
-					instancedGeometry,
-					instanceMaterial
-				))
+				// scene.add(new THREE.Mesh(
+				// 	instancedGeometry,
+				// 	instanceMaterial
+				// ))
 				//------------------------------------------------------------------
 				
 				//
@@ -305,7 +351,15 @@
 			function animate() {
 
 				requestAnimationFrame( animate );
-				
+
+				_projScreenMatrix.multiplyMatrices( camera.projectionMatrix, camera.matrixWorldInverse )
+				_frustum.setFromMatrix( _projScreenMatrix )
+				result = []
+				map = {}
+				customProjectObject(result)(intersectsScene)
+				result.sort((a,b)=>(a.z-b.z))
+				console.log(result.length)
+
 				render();
 				stats.update();
 
@@ -327,42 +381,41 @@
 
 				raycaster.setFromCamera( mouse, camera );
 
-				var intersects = raycaster.intersectObjects( intersectsScene.children );
+				// var intersects = raycaster.intersectObjects( intersectsScene.children );
 
-				if ( intersects.length > 0 ) {
+				// if ( intersects.length > 0 ) {
 
-					if ( INTERSECTED != intersects[ 0 ].object ) {
+				// 	if ( INTERSECTED != intersects[ 0 ].object ) {
 
-						if ( INTERSECTED ) 
-							setEmissiveAtIndex(
-							  INTERSECTED.userData.index, 
-							  INTERSECTED.currentColorArray 
-							)
+				// 		if ( INTERSECTED ) 
+				// 			setEmissiveAtIndex(
+				// 			  INTERSECTED.userData.index, 
+				// 			  INTERSECTED.currentColorArray 
+				// 			)
 
-						INTERSECTED = intersects[ 0 ].object;
-						INTERSECTED.currentColorArray = getEmissiveAtIndex(INTERSECTED.userData.index)
-						setEmissiveAtIndex(
-						  	INTERSECTED.userData.index, 
-						  	red
-						)
+				// 		INTERSECTED = intersects[ 0 ].object;
+				// 		INTERSECTED.currentColorArray = getEmissiveAtIndex(INTERSECTED.userData.index)
+				// 		setEmissiveAtIndex(
+				// 		  	INTERSECTED.userData.index, 
+				// 		  	red
+				// 		)
 
-					}
+				// 	}
 
-				} else {
+				// } else {
 
-					if ( INTERSECTED ) setEmissiveAtIndex(
-						INTERSECTED.userData.index, 
-						INTERSECTED.currentColorArray 
-					)
+				// 	if ( INTERSECTED ) setEmissiveAtIndex(
+				// 		INTERSECTED.userData.index, 
+				// 		INTERSECTED.currentColorArray 
+				// 	)
 					
-					INTERSECTED = null;
+				// 	INTERSECTED = null;
 					
-				}
+				// }
 
 
 				//------------------------------------------------------------------
 				
-				// console.log(renderer.info.render.calls)
 				renderer.render( scene, camera );
 
 			}
