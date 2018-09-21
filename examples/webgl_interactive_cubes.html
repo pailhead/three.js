@@ -25,6 +25,7 @@
 			var container, stats;
 			var camera, scene, raycaster, renderer;
 
+			var drawCalls
 
 			camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 1, 10000 );
 			var helper = new THREE.CameraHelper( camera );
@@ -36,7 +37,7 @@
 			function _keydown(e){
 				console.log(e.keyCode)
 				switch ( e.keyCode ) {
-					case 87: 
+					case 32: 
 						toggleCamera = !toggleCamera
 					break;
 				}
@@ -108,6 +109,13 @@
 				info.style.textAlign = 'center';
 				info.innerHTML = '<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> webgl - interactive cubes';
 				container.appendChild( info );
+
+				drawCalls = document.createElement( 'div' );
+				drawCalls.style.position = 'absolute';
+				drawCalls.style.bottom = '10px';
+				drawCalls.style.left = '10px';
+				drawCalls.style.width = '100%';
+				container.appendChild( drawCalls );
 
 				scene = new THREE.Scene();
 				scene.background = new THREE.Color( 0xf0f0f0 );
@@ -444,7 +452,8 @@
 
 
 				//------------------------------------------------------------------
-				console.log(renderer.info.render.calls)
+				// console.log()
+				drawCalls.innerHTML = `<b>draw calls: ${renderer.info.render.calls}</b>`
 				renderer.render( scene, toggleCamera ? camera : cameraDebug );
 
 			}
