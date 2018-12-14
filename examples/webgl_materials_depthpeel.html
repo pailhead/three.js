@@ -53,7 +53,7 @@
 
 			}
 
-			var renderer, scene, camera;
+			var renderer, scene, camera, gl;
 
 			var	gui = new dat.GUI( { width: 350 } );
 
@@ -63,6 +63,8 @@
 
 			var debugScene, debugCamera
 			var depthMaterial, depthTarget, compositeMaterial, gl
+
+			var paintMaterial
 
 			var compositeScene = new THREE.Scene()
 
@@ -74,7 +76,7 @@
 				layers: 1,
 				opacity: 0.5,
 				doubleSide: false,
-				enabled: false,
+				enabled: true,
 				monochrome: false,
 			}
 
@@ -87,7 +89,7 @@
 				uDepthOffset: { value: 0 },
 			} 
 
-			gui.add(options, 'layers', 1, 6).step(1)
+			gui.add(options, 'layers', 0, 6).step(1)
 			gui.add(options, 'opacity', 0, 1).onChange(onOpacityChange)
 			gui.add(options, 'enabled').onChange(onModeChange)
 			gui.add(options, 'doubleSide').onChange(onSideChange)
@@ -128,6 +130,10 @@
 					o.material.transparent = !options.enabled
 				})
 				globalPeelUniforms.uDepthPeel.value = Number(options.enabled) 
+
+
+				opaqueObjects.forEach(o=>o.visible = true)
+				transparentObjects.forEach(o=>o.visible = true)
 			}
 
 			function getSide(){
@@ -162,7 +168,7 @@
 						    vec2 screenPos = gl_FragCoord.xy * uScreenSize;
 						    
 						    float prevDepth = unpackRGBAToDepth(texture2D(uPrevDepthTexture,screenPos));
-						    
+
 						    if(prevDepth + uDepthOffset - gl_FragCoord.z >= 0. ){
 						   	    discard;
 						    }
@@ -226,15 +232,19 @@
 
 
 				// renderer
-				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true});
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, premultipliedAlpha: false});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.autoClear = false
 				document.body.appendChild( renderer.domElement );
+
+				gl = renderer.getContext()
 
 				stats = new Stats();
 				document.body.appendChild( stats.dom )
 
 				renderer.gammaOutput = true;
+
+				renderer.info.autoReset = false
 
 				// scene
 				scene = new THREE.Scene();
@@ -242,7 +252,7 @@
 				scene.autoUpdate = false;
 
 				// camera
-				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 100 );
+				camera = new THREE.PerspectiveCamera( 40, window.innerWidth / window.innerHeight, 1, 1000 );
 				camera.position.set( - 10, 0, 23 );
 				scene.add( camera );
 
@@ -273,7 +283,8 @@
 					uniforms:{
 						uTextureA: { value: null },
 						uTextureB: { value: null },
-						uBlit: {value: 0 }
+						uBlit: { value: 0 },
+						uStencil: { value: 0 }
 					},
 					vertexShader:`
 						varying vec2 vUv;
@@ -287,22 +298,65 @@
 						uniform sampler2D uTextureA;
 						uniform sampler2D uTextureB;
 						uniform int uBlit;
+						uniform int uStencil;
 
 						void main(){
 							vec4 src = texture2D(uTextureA,vUv);
 							vec4 dst = texture2D(uTextureB,vUv);
-	
-							float a1 = 1.-src.a;					
-							gl_FragColor.a = src.a + a1 * dst.a;
-							gl_FragColor.rgb = src.rgb + a1 * dst.rgb;
-							gl_FragColor.rgb /= gl_FragColor.a;
+							
+							if(uBlit == 0 ){
+								float a1 = 1.-src.a;					
+								gl_FragColor.a = src.a + a1 * dst.a;
+								gl_FragColor.rgb = src.rgb + a1 * dst.rgb;
+								gl_FragColor.rgb /= gl_FragColor.a;
+							} else {
+								gl_FragColor = src;
+								// gl_FragColor.rgb /= gl_FragColor.a;
+							}
+
+							if(uStencil == 1){
+								if(gl_FragColor.a < 1. && dst.a < 1. ) discard;
+							} else if (uStencil == 2){
+								if(gl_FragColor.a == 1. ) discard;
+							}
 						}
 					`,
 					transparent:true,
 					depthTest:false,
 					depthWrite: false,
+
+					blending: THREE.CustomBlending,
+
+					blendEquation: THREE.AddEquation,
+
+					blendDst: THREE.OneFactor,
+					// blendDstAlpha: THREE.OneFactor,
+					blendDstAlpha: null,
+
+					blendSrc: THREE.OneMinusDstAlphaFactor,
+					// blendSrcAlpha: THREE.OneMinusDstAlphaFactor,
+					blendSrcAlpha: null,
+
+
 				})
 
+				paintMaterial = new THREE.ShaderMaterial({
+					uniforms:{
+						uColor: {value: new THREE.Color(1,0,0)},
+					},
+					vertexShader: compositeMaterial.vertexShader,
+					fragmentShader:`
+					uniform vec3 uColor;
+
+					void main(){
+						gl_FragColor = vec4(uColor,.5);
+					}
+					`,
+					depthTest: false,
+					depthWrite: false,
+					transparent: true,
+
+				})
 				const compositePlane = new THREE.Mesh(planeGeometry,compositeMaterial)
 				compositePlane.frustumCulled = false
 				compositeScene.add(compositePlane)
@@ -361,6 +415,7 @@
 
 				for( let i = 0 ; i < 4 ; i ++ ){
 					const m = new THREE.Mesh(boxGeometry, opaque)
+					opaqueObjects.push(m)
 					scene.add(m)
 					const angle = i / 2 * Math.PI
 					m.position.set(Math.sin(angle),0,Math.cos(angle)).multiplyScalar(10)
@@ -383,6 +438,128 @@
 				onModeChange()
 
 				animate()
+
+			}
+
+			function renderDepthPeel2(){
+
+				globalPeelUniforms.uLayer.value = 0
+				globalPeelUniforms.uPrevDepthTexture.value = null
+
+				gl.colorMask(true,true,true,true)
+				gl.depthMask(true)
+
+				renderer.setRenderTarget()
+				renderer.setClearColor(0x888888,1)
+				renderer.clear()
+
+				renderer.setRenderTarget( targets[2] )
+				renderer.setClearColor(0,0)
+				renderer.clear()
+
+				renderer.setRenderTarget( targets[1] )
+				renderer.setClearColor(0xffffff,1)
+				renderer.clear()
+
+				renderer.setRenderTarget( targets[0] )
+				renderer.setClearColor(0,0)
+				renderer.clear()
+
+
+
+				//opaque
+				opaqueObjects.forEach(o=>o.visible = true)
+				transparentObjects.forEach(o=>o.visible = false )
+
+				renderer.render( scene , camera )
+
+				//disable color write
+				gl.colorMask(false,false,false,false)
+
+				//render opaque 0 depth buffer
+				renderer.render( scene , camera, targets[0], false )
+
+				//render opaque 1 depth buffer 
+				renderer.render( scene , camera, targets[1], false )
+
+				//turn on transparent
+				opaqueObjects.forEach(o=>o.visible = false)
+				transparentObjects.forEach(o=>o.visible = true)
+
+				//enable stencil and color
+				gl.enable(gl.STENCIL_TEST)
+				gl.colorMask(true,true,true,true)
+
+				gl.stencilFunc(gl.ALWAYS, 1 , 0xff)
+				gl.stencilOp(gl.KEEP,gl.KEEP,gl.REPLACE)
+
+				//set and depth
+				scene.overrideMaterial = depthMaterial
+
+				renderer.render( scene , camera, targets[1], false )
+
+				scene.overrideMaterial = null
+
+				renderer.render( scene , camera, targets[0], false )
+
+				compositeMaterial.blendSrc = THREE.OneMinusDstAlphaFactor
+				compositeMaterial.blendDst = THREE.OneFactor
+				// compositeMaterial.blendSrcAlpha = THREE.OneFactor
+				// compositeMaterial.blendDstAlpha = THREE.ZeroFactor
+
+				compositeMaterial.uniforms.uTextureA.value = targets[0]
+				compositeMaterial.uniforms.uBlit.value = 1 
+				renderer.render( compositeScene , camera, targets[2] )
+
+
+				for( let i = 0 ; i < options.layers ; i ++ ){
+
+					const flip = i % 2 
+					const flop = (i+1)%2
+				
+					//next peel
+					globalPeelUniforms.uPrevDepthTexture.value = targets[flop]
+					globalPeelUniforms.uLayer.value = i + 1
+
+					gl.stencilFunc(gl.GEQUAL, i + 1 , 0xff)
+					gl.stencilOp(gl.KEEP,gl.KEEP,gl.INCREMENT)
+
+					renderer.setRenderTarget(targets[flip])
+					renderer.setClearColor(0,0)
+					renderer.clear(true,true,false)
+
+					renderer.render( scene , camera, targets[flip], false )
+
+					compositeMaterial.uniforms.uTextureA.value = targets[flip]
+
+					gl.disable(gl.STENCIL_TEST)
+
+					renderer.render( compositeScene, camera, targets[2] )
+
+					gl.enable(gl.STENCIL_TEST)
+
+					renderer.setRenderTarget(targets[flip])
+					renderer.setClearColor(0xffffff,1)
+					renderer.clear(true,true,false)
+
+					scene.overrideMaterial = depthMaterial
+
+					renderer.render( scene , camera, targets[flip], false )
+
+					scene.overrideMaterial = null
+
+				}
+
+				gl.disable(gl.STENCIL_TEST)
+
+				
+				compositeMaterial.blendSrc = THREE.OneFactor
+				compositeMaterial.blendDst = THREE.OneMinusSrcAlphaFactor
+				compositeMaterial.blendSrcAlpha = null
+				compositeMaterial.blendDstAlpha = null
+				compositeMaterial.uniforms.uTextureA.value = targets[2]
+
+				renderer.render( compositeScene , camera )
 
 			}
 
@@ -424,11 +601,14 @@
 					renderer.setClearColor(0x000,0)
 					renderer.render( scene, camera, targets[d], true)
 
+
 					//combine
 					compositeMaterial.uniforms.uTextureA.value = targets[c]
 					compositeMaterial.uniforms.uTextureB.value = targets[d]
-					renderer.render( compositeScene, camera, targets[a], true)
+					// renderer.render( compositeScene, camera, targets[a], true)
 
+					compositeMaterial.uniforms.uBlit.value = 1 
+					renderer.render( compositeScene, camera )
 				}
 
 				//render final result over opaque objects
@@ -436,8 +616,8 @@
 
 				transparentObjects.forEach(o=>o.visible = false)
 				
-				renderer.render( scene, camera )
-				renderer.render( compositeScene, camera )
+				// renderer.render( scene, camera )
+				// renderer.render( compositeScene, camera )
 
 				transparentObjects.forEach(o=>o.visible = true)
 			}
@@ -472,15 +652,18 @@
 
 			function render() {
 
-				if(!options.enabled){
+				renderer.info.reset()
 
+				if(!options.enabled){
+					renderer.setClearColor(0x888888,1)
 					renderer.clear()
 					renderer.render( scene, camera )
 				
 				} else {
 
-					renderDepthPeel()
-					// renderer.render( debugScene , debugCamera )
+					// renderDepthPeel()
+					renderDepthPeel2()
+					renderer.render( debugScene , debugCamera )
 				
 				}
 
