@@ -55,6 +55,8 @@
 
 			const dpr = window.devicePixelRatio
 
+			console.log('dpr is ', dpr)
+
 			var renderer, scene, camera, gl;
 
 			var	gui = new dat.GUI( { width: 350 } );
@@ -235,10 +237,10 @@
 
 				// renderer
 				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, premultipliedAlpha: false});
-				renderer.setSize( window.innerWidth * dpr, window.innerHeight * dpr );
+				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.autoClear = false
 				document.body.appendChild( renderer.domElement );
-
+				renderer.setPixelRatio(dpr)
 				gl = renderer.getContext()
 
 				stats = new Stats();
@@ -370,7 +372,7 @@
 
 				initTargets()
 
-				globalPeelUniforms.uScreenSize.value.set(1/window.innerWidth,1/window.innerHeight)
+				globalPeelUniforms.uScreenSize.value.set(1/(window.innerWidth * dpr),1/(window.innerHeight * dpr))
 				const numItems = 10
 
 				const boxGeometry = new THREE.BoxBufferGeometry(2,2,2,1,1,1)
@@ -529,6 +531,18 @@
 					renderer.setRenderTarget(targets[flip])
 					renderer.setClearColor(0,0)
 					renderer.clear(true,true,false)
+
+
+					opaqueObjects.forEach(o=>o.visible = true)
+					transparentObjects.forEach(o=>o.visible = false )
+
+					gl.colorMask(false,false,false,false)
+					renderer.render( scene , camera, targets[flip], false )
+					gl.colorMask(true,true,true,true)
+
+					opaqueObjects.forEach(o=>o.visible = false)
+					transparentObjects.forEach(o=>o.visible = true )
+
 
 					renderer.render( scene , camera, targets[flip], false )
 
