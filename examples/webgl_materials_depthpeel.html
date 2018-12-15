@@ -199,7 +199,7 @@
 				shader.fragmentShader = shader.fragmentShader.replace(
 					/}$/gm,
 					`	
-						gl_FragColor.xyz *= gl_FragColor.a;
+						// gl_FragColor.xyz *= gl_FragColor.a;
 					}
 					`
 				)
@@ -236,7 +236,8 @@
 
 
 				// renderer
-				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, premultipliedAlpha: false});
+				// renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, premultipliedAlpha: false});
+				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, premultipliedAlpha: true});
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				renderer.autoClear = false
 				document.body.appendChild( renderer.domElement );
@@ -308,15 +309,25 @@
 							vec4 src = texture2D(uTextureA,vUv);
 							vec4 dst = texture2D(uTextureB,vUv);
 							
-							if(uBlit == 0 ){
-								float a1 = 1.-src.a;					
-								gl_FragColor.a = src.a + a1 * dst.a;
-								gl_FragColor.rgb = src.rgb + a1 * dst.rgb;
-								gl_FragColor.rgb /= gl_FragColor.a;
-							} else {
+							if(uBlit == 0 )
+
+							{
 								gl_FragColor = src;
-								// gl_FragColor.rgb /= gl_FragColor.a;
 							}
+
+							// {
+							// 	float a1 = 1.-src.a;					
+							// 	gl_FragColor.a = src.a + a1 * dst.a;
+							// 	gl_FragColor.rgb = src.rgb + a1 * dst.rgb;
+							// 	gl_FragColor.rgb /= gl_FragColor.a;
+							// } 
+
+							else {
+								gl_FragColor = src;
+								gl_FragColor.xyz *= gl_FragColor.a;
+								// gl_FragColor.xyz = src.aaa;
+								//gl_FragColor.rgb /= gl_FragColor.a;
+							} 
 
 							if(uStencil == 1){
 								if(gl_FragColor.a < 1. && dst.a < 1. ) discard;
@@ -449,6 +460,7 @@
 
 				globalPeelUniforms.uLayer.value = 0
 				globalPeelUniforms.uPrevDepthTexture.value = null
+				compositeMaterial.uniforms.uBlit.value = 1 
 
 				gl.colorMask(true,true,true,true)
 				gl.depthMask(true)
@@ -508,8 +520,9 @@
 
 				compositeMaterial.blendSrc = THREE.OneMinusDstAlphaFactor
 				compositeMaterial.blendDst = THREE.OneFactor
-				// compositeMaterial.blendSrcAlpha = THREE.OneFactor
-				// compositeMaterial.blendDstAlpha = THREE.ZeroFactor
+				// compositeMaterial.blendDst = THREE.DstAlphaFactor
+				// compositeMaterial.blendSrcAlpha = THREE.OneMinusDstAlphaFactor
+				// compositeMaterial.blendDstAlpha = THREE.OneFactor
 
 				compositeMaterial.uniforms.uTextureA.value = targets[0]
 				compositeMaterial.uniforms.uBlit.value = 1 
@@ -569,7 +582,9 @@
 				gl.disable(gl.STENCIL_TEST)
 
 				
+				compositeMaterial.uniforms.uBlit.value = 0 
 				compositeMaterial.blendSrc = THREE.OneFactor
+				// compositeMaterial.blendSrc = THREE.SrcAlphaFactor
 				compositeMaterial.blendDst = THREE.OneMinusSrcAlphaFactor
 				compositeMaterial.blendSrcAlpha = null
 				compositeMaterial.blendDstAlpha = null
