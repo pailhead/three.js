@@ -53,6 +53,8 @@
 
 			}
 
+			const dpr = window.devicePixelRatio
+
 			var renderer, scene, camera, gl;
 
 			var	gui = new dat.GUI( { width: 350 } );
@@ -211,8 +213,8 @@
 
 					targets.push(
 						new THREE.WebGLRenderTarget(
-							window.innerWidth,
-							window.innerHeight, 
+							window.innerWidth * dpr,
+							window.innerHeight * dpr, 
 							{
 								minFilter: THREE.NearestFilter, 
 								magFilter: THREE.NearestFilter 
@@ -233,7 +235,7 @@
 
 				// renderer
 				renderer = new THREE.WebGLRenderer({preserveDrawingBuffer: true, premultipliedAlpha: false});
-				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setSize( window.innerWidth * dpr, window.innerHeight * dpr );
 				renderer.autoClear = false
 				document.body.appendChild( renderer.domElement );
 
@@ -624,9 +626,9 @@
 
 			function onWindowResize() {
 
-				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.setSize( window.innerWidth * dpr, window.innerHeight * dpr );
 
-				globalPeelUniforms.uScreenSize.value.set(1/window.innerWidth,1/window.innerHeight)
+				globalPeelUniforms.uScreenSize.value.set(1/(window.innerWidth * dpr),1/(window.innerHeight * dpr))
 
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
