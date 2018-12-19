@@ -227,11 +227,13 @@
 					)
 
 					debugScene.children[i].material.map = targets[i]
+
+					targets[i].ownDepthBuffer = depthStencilBuffer
 				
 				}
 
-				targets[0].ownDepthBuffer = depthStencilBuffer
-				targets[1].ownDepthBuffer = depthStencilBuffer
+				// targets[0].ownDepthBuffer = depthStencilBuffer
+				// targets[1].ownDepthBuffer = depthStencilBuffer
 
 			}
 
@@ -534,7 +536,13 @@
 
 				compositeMaterial.uniforms.uTextureA.value = targets[0]
 				compositeMaterial.uniforms.uBlit.value = 1 
+				
+				gl.stencilFunc(gl.EQUAL, 1 , 0xff)
+				gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
+
 				renderer.render( compositeScene , camera, targets[2] )
+
+
 				// console.log('>>>>>')
 				let bit = 1
 				// console.log(targets[0])
@@ -591,11 +599,18 @@
 					//
 					compositeMaterial.uniforms.uTextureA.value = targets[flip]
 
-					gl.disable(gl.STENCIL_TEST)
+					// gl.disable(gl.STENCIL_TEST)
 
+					gl.stencilFunc(gl.EQUAL, bit, 1<<(i+1))
+					gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
+
+					// compositeScene.overrideMaterial = paintMaterial
+					// compositeScene.overrideMaterial.depthTest = false
+					// paintMaterial.uniforms.uColor.value.setHSL(i/8,1,0.5)
 					renderer.render( compositeScene, camera, targets[2] )
+					// compositeScene.overrideMaterial = null
 
-					gl.enable(gl.STENCIL_TEST)
+					// gl.enable(gl.STENCIL_TEST)
 
 
 					//clear depth target and render
@@ -605,40 +620,18 @@
 
 					scene.overrideMaterial = depthMaterial
 
-					{	
-						// console.log(`next ${(1 << (i+1)).toString(2)}`)
-						gl.stencilFunc(gl.EQUAL, bit, 1 << (i+1))
-						gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
-
-						//turn on opaque objects turn off transparent
-						//
-						// opaqueObjects.forEach(o=>o.visible = true)
-						// transparentObjects.forEach(o=>o.visible = false )
-
-						//disable color write
-						// gl.colorMask(false,false,false,false)
-						
-						//render opaque into target 
-						// renderer.render( scene , camera, targets[flip], false )
-						
-						// gl.colorMask(true,true,true,true)
-
-						// opaqueObjects.forEach(o=>o.visible = false)
-						// transparentObjects.forEach(o=>o.visible = true )
-					}
-
-
+					gl.stencilFunc(gl.EQUAL, bit, 1 << (i+1))
+					gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP)
 
 					renderer.render( scene , camera, targets[flip], false )
 
-					// gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
 
 					// if( i === options.layers - 1 ){
-
-					// gl.stencilFunc(gl.EQUAL, bit, 1<<(i+1))
-					// compositeScene.overrideMaterial = paintMaterial
-					renderer.render( compositeScene, camera, targets[flip])
-					// compositeScene.overrideMaterial = null
+					// 	gl.stencilFunc(gl.EQUAL, bit, 1<<(i+1))
+					// 	gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
+					// 	compositeScene.overrideMaterial = paintMaterial
+					// 	renderer.render( compositeScene, camera, targets[flip])
+					// 	compositeScene.overrideMaterial = null
 					// }
 
 					scene.overrideMaterial = null
