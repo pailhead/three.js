@@ -33,6 +33,7 @@
 	<body>
 		<div id="info">
 			<a href="http://threejs.org" target="_blank" rel="noopener">three.js</a> - webgl depth peel demo by <a href="http://dusanbosnjak.com" target="_blank" rel="noopener">pailhead</a>.<br />
+			<div id="DEPTH_BITS"/>
 		</div>
 
 		<script src="../build/three.js"></script>
@@ -54,6 +55,7 @@
 			}
 
 			const dpr = 1
+			// const dpr = window.devicePixelRatio
 
 			console.log('dpr is ', dpr)
 
@@ -250,6 +252,8 @@
 				document.body.appendChild( renderer.domElement );
 				renderer.setPixelRatio(dpr)
 				gl = renderer.getContext()
+
+				document.getElementById('DEPTH_BITS').innerHTML = gl.getParameter(gl.DEPTH_BITS)
 
 				stats = new Stats();
 				document.body.appendChild( stats.dom )
@@ -468,6 +472,7 @@
 
 			function renderDepthPeel2(){
 
+
 				globalPeelUniforms.uLayer.value = 0
 				globalPeelUniforms.uPrevDepthTexture.value = null
 				compositeMaterial.uniforms.uBlit.value = 1 
@@ -493,27 +498,30 @@
 
 
 
+				gl.enable(gl.STENCIL_TEST)
 				//opaque
 				opaqueObjects.forEach(o=>o.visible = true)
 				transparentObjects.forEach(o=>o.visible = false )
 
-				renderer.render( scene , camera )
+				// renderer.render( scene , camera )
+
+				gl.stencilFunc(gl.ALWAYS, 0 , 0xff)
+				gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
 
 				//disable color write
 				gl.colorMask(false,false,false,false)
 
 				//render opaque 0 depth buffer
-				renderer.render( scene , camera, targets[0], false )
+				renderer.render( scene , camera, targets[0] )
 
 				//render opaque 1 depth buffer 
-				renderer.render( scene , camera, targets[1], false )
+				// renderer.render( scene , camera, targets[1], false )
 
 				//turn on transparent
 				opaqueObjects.forEach(o=>o.visible = false)
 				transparentObjects.forEach(o=>o.visible = true)
 
 				//enable stencil and color
-				gl.enable(gl.STENCIL_TEST)
 				gl.colorMask(true,true,true,true)
 
 				gl.stencilFunc(gl.ALWAYS, 1 , 0xff)
@@ -526,13 +534,16 @@
 
 				scene.overrideMaterial = null
 
+				gl.stencilFunc(gl.EQUAL, 1 , 0xff)
+				gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
+
+				renderer.setRenderTarget( targets[0] )
+				renderer.clear(false,true,false)
+
 				renderer.render( scene , camera, targets[0], false )
 
 				compositeMaterial.blendSrc = THREE.OneMinusDstAlphaFactor
 				compositeMaterial.blendDst = THREE.OneFactor
-				// compositeMaterial.blendDst = THREE.DstAlphaFactor
-				// compositeMaterial.blendSrcAlpha = THREE.OneMinusDstAlphaFactor
-				// compositeMaterial.blendDstAlpha = THREE.OneFactor
 
 				compositeMaterial.uniforms.uTextureA.value = targets[0]
 				compositeMaterial.uniforms.uBlit.value = 1 
@@ -542,12 +553,22 @@
 
 				renderer.render( compositeScene , camera, targets[2] )
 
+				// {	
+				// 	compositeScene.overrideMaterial = paintMaterial
+				// 	paintMaterial.transparent = false
+				// 	compositeScene.overrideMaterial.depthTest = false
+				// 	// paintMaterial.uniforms.uColor.value.setHSL(i/8,1,0.5)
+				// 	renderer.render( compositeScene, camera, targets[2] )
+				// 	compositeScene.overrideMaterial = null
+				// }
+
+				// return
 
 				// console.log('>>>>>')
 				let bit = 1
 				// console.log(targets[0])
 				for( let i = 0 ; i < options.layers ; i ++ ){
-
+					// continue
 					const flip = i % 2 
 					const flop = (i+1)%2
 				
@@ -605,6 +626,7 @@
 					gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
 
 					// compositeScene.overrideMaterial = paintMaterial
+					// paintMaterial.transparent = false
 					// compositeScene.overrideMaterial.depthTest = false
 					// paintMaterial.uniforms.uColor.value.setHSL(i/8,1,0.5)
 					renderer.render( compositeScene, camera, targets[2] )
@@ -639,11 +661,24 @@
 				}
 
 				gl.disable(gl.STENCIL_TEST)
+				// 
+				// gl.bindFramebuffer( gl.FRAMEBUFFER, null )
 
-				
+				// gl.framebufferRenderbuffer( gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, depthStencilBuffer )
+
+
+				globalPeelUniforms.uLayer.value = 0
+				gl.stencilFunc(gl.ALWAYS, 1, 0xff)
+				gl.stencilOp(gl.KEEP,gl.KEEP,gl.KEEP)
+				opaqueObjects.forEach(o=>{o.visible = true;  o.depthTest = false})
+				transparentObjects.forEach(o=>o.visible = false )
+
+				renderer.render( scene , camera )
+
+				// return
+				// gl.stencilFunc(gl.EQUAL, 1, 0xff)
 				compositeMaterial.uniforms.uBlit.value = 0 
 				compositeMaterial.blendSrc = THREE.OneFactor
-				// compositeMaterial.blendSrc = THREE.SrcAlphaFactor
 				compositeMaterial.blendDst = THREE.OneMinusSrcAlphaFactor
 				compositeMaterial.blendSrcAlpha = null
 				compositeMaterial.blendDstAlpha = null
@@ -690,7 +725,6 @@
 					scene.overrideMaterial = null
 					renderer.setClearColor(0x000,0)
 					renderer.render( scene, camera, targets[d], true)
-
 
 					//combine
 					compositeMaterial.uniforms.uTextureA.value = targets[c]
@@ -753,6 +787,7 @@
 
 					// renderDepthPeel()
 					renderDepthPeel2()
+					gl.disable(gl.STENCIL_TEST)
 					if(options.debug)
 					renderer.render( debugScene , debugCamera )
 				
