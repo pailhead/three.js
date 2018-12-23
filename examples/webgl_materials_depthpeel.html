@@ -336,15 +336,18 @@
 							else {
 								gl_FragColor = src;
 								gl_FragColor.xyz *= gl_FragColor.a;
+
 								// gl_FragColor.xyz = src.aaa;
 								//gl_FragColor.rgb /= gl_FragColor.a;
 							} 
 
-							if(uStencil == 1){
-								if(gl_FragColor.a < 1. && dst.a < 1. ) discard;
-							} else if (uStencil == 2){
-								if(gl_FragColor.a == 1. ) discard;
-							}
+							if(gl_FragColor.a == 0.) discard;
+
+							// if(uStencil == 1){
+							// 	if(gl_FragColor.a < 1. && dst.a < 1. ) discard;
+							// } else if (uStencil == 2){
+							// 	if(gl_FragColor.a == 1. ) discard;
+							// }
 						}
 					`,
 					transparent:true,
