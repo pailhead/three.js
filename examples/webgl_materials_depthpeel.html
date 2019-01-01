@@ -477,6 +477,33 @@
 					console.error( e );
 
 				} );
+
+
+				loader.load( 'models/gltf/spheres-transparent.glb', function ( gltf ) {
+
+					gltf.scene.traverse( function ( child ) {
+
+						if ( child.isMesh ) {
+
+							if(child.material.transparent){
+								transparentObjects.push(child)
+							}
+							else
+								opaqueObjects.push(child)
+
+							child.material.onBeforeCompile = colorOnBeforeCompile
+						}
+
+					} );
+					gltf.scene.scale.multiplyScalar(2)		
+					scene.add(gltf.scene.clone())
+					gltf.scene.position.x = 10				
+					gltf.scene.position.z = 10		
+
+						
+					scene.add(gltf.scene)
+				})
+
 /*
 				const numItems = 10
 
