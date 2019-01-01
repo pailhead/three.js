@@ -45,6 +45,7 @@
 		<script src="./js/libs/dat.gui.min.js"></script>
 
 		<script src="js/libs/stats.min.js"></script>
+		<script src="js/loaders/GLTFLoader.js"></script>
 
 		<script>
 
@@ -401,6 +402,82 @@
 				initTargets(depthStencilBuffer)
 
 				globalPeelUniforms.uScreenSize.value.set(1/(window.innerWidth * dpr),1/(window.innerHeight * dpr))
+				
+
+				// envmap
+				var path = 'textures/cube/Bridge2/';
+				var format = '.jpg';
+				var envMap = new THREE.CubeTextureLoader().load( [
+					path + 'posx' + format, path + 'negx' + format,
+					path + 'posy' + format, path + 'negy' + format,
+					path + 'posz' + format, path + 'negz' + format
+				] );
+
+				// model
+				var loader = new THREE.GLTFLoader();
+
+				loader.load( 'models/gltf/Scotch-glb_002.glb', function ( gltf ) {
+
+					gltf.scene.traverse( function ( child ) {
+
+						if ( child.isMesh ) {
+
+							child.material.envMap = envMap;
+
+							if(child.material.transparent){
+								transparentObjects.push(child)
+							}
+							else
+								opaqueObjects.push(child)
+
+							child.material.onBeforeCompile = colorOnBeforeCompile
+							console.log(child.material)
+						}
+
+					} );
+					gltf.scene.scale.multiplyScalar(1)
+					gltf.scene.position.x = -5
+					gltf.scene.position.y = -5
+					gltf.scene.position.z = 5
+					console.log("gltf.scene.scale", gltf.scene);
+					gltf.scene.updateMatrixWorld(true)
+					scene.add( gltf.scene );
+
+					const boxGeometry = new THREE.BoxBufferGeometry(2,2,2,1,1,1)
+					const mesh = new THREE.Mesh(
+						boxGeometry, 
+						new THREE.MeshPhongMaterial({
+						// new THREE.MeshBasicMaterial({
+							opacity: options.opacity,
+							side: getSide(),
+						})
+					)
+					mesh.scale.x = 50
+					mesh.renderOrder = 1
+
+					transparentObjects.push(mesh)
+					
+					
+					mesh.material.onBeforeCompile = colorOnBeforeCompile
+
+					scene.add(mesh)
+					
+					const m = mesh.clone()
+					
+					m.position.y += 4
+
+				const opaque = new THREE.MeshPhongMaterial({color:'white'})
+				opaque.onBeforeCompile = colorOnBeforeCompile
+				m.material = opaque
+
+					scene.add(m)
+					scene.updateMatrixWorld(true)
+				}, undefined, function ( e ) {
+
+					console.error( e );
+
+				} );
+/*
 				const numItems = 10
 
 				const boxGeometry = new THREE.BoxBufferGeometry(2,2,2,1,1,1)
@@ -454,7 +531,7 @@
 					m.scale.multiplyScalar(1.5)
 					m.scale.y = 3.5
 				}
-
+*/
 				// ambient
 				scene.add( new THREE.AmbientLight( 0xffffff, .5 ) );
 
@@ -465,7 +542,7 @@
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
-				scene.updateMatrixWorld()
+				scene.updateMatrixWorld(true)
 
 				onModeChange()
 
