@@ -51,6 +51,26 @@
 				renderer = new THREE.WebGPURenderer( { antialias: true, forceWebGL } );
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
+
+				if ( window.TESTING ) {
+
+					await new Promise( resolve => {
+
+						const intervalId = setInterval( () => {
+
+							if ( window._renderStarted === true ) {
+
+								clearInterval( intervalId );
+								resolve();
+
+							}
+
+						}, 10 );
+
+					} );
+
+				}
+
 				renderer.setAnimationLoop( render );
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
 
