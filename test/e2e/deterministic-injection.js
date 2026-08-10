@@ -25,25 +25,8 @@
 
 	window._renderStarted = false;
 	window._renderFinished = false;
-	window._e2eRAFTrace = [];
-
-	function traceRAF( event ) {
-
-		const entry = {
-			event,
-			time: window.performance._now(),
-			renderStarted: window._renderStarted,
-			renderFinished: window._renderFinished
-		};
-
-		window._e2eRAFTrace.push( entry );
-		console.log( `[E2E RAF] ${ event } started=${ entry.renderStarted } finished=${ entry.renderFinished }` );
-
-	}
 
 	window.requestAnimationFrame = function ( cb ) {
-
-		traceRAF( 'request' );
 
 		if ( window._renderFinished === true ) return;
 
@@ -56,7 +39,6 @@
 			} else if ( window._renderStarted === true ) {
 
 				clearInterval( intervalId );
-				traceRAF( 'callback' );
 				cb( now() );
 				window._renderFinished = true;
 
