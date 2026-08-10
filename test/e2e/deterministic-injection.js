@@ -47,27 +47,22 @@
 
 		if ( window._renderFinished === true ) return;
 
-		if ( window._renderStarted === false ) {
+		const intervalId = setInterval( function () {
 
-			const intervalId = setInterval( function () {
+			if ( window._renderFinished === true ) {
 
-				if ( window._renderStarted === true ) {
+				clearInterval( intervalId );
 
-					traceRAF( 'callback' );
-					cb( now() );
+			} else if ( window._renderStarted === true ) {
 
-					clearInterval( intervalId );
-					window._renderFinished = true;
+				clearInterval( intervalId );
+				traceRAF( 'callback' );
+				cb( now() );
+				window._renderFinished = true;
 
-				}
+			}
 
-			}, 100 );
-
-		} else {
-
-			traceRAF( 'discarded-after-start' );
-
-		}
+		}, 100 );
 
 	};
 
