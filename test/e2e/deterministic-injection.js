@@ -25,26 +25,49 @@
 
 	window._renderStarted = false;
 	window._renderFinished = false;
+	window._e2eRAFTrace = [];
+
+	function traceRAF( event ) {
+
+		const entry = {
+			event,
+			time: window.performance._now(),
+			renderStarted: window._renderStarted,
+			renderFinished: window._renderFinished
+		};
+
+		window._e2eRAFTrace.push( entry );
+		console.log( `[E2E RAF] ${ event } started=${ entry.renderStarted } finished=${ entry.renderFinished }` );
+
+	}
 
 	window.requestAnimationFrame = function ( cb ) {
 
+		traceRAF( 'request' );
+
 		if ( window._renderFinished === true ) return;
 
-		const intervalId = setInterval( function () {
+		if ( window._renderStarted === false ) {
 
-			if ( window._renderFinished === true ) {
+			const intervalId = setInterval( function () {
 
-				clearInterval( intervalId );
+				if ( window._renderStarted === true ) {
 
-			} else if ( window._renderStarted === true ) {
+					traceRAF( 'callback' );
+					cb( now() );
 
-				clearInterval( intervalId );
-				cb( now() );
-				window._renderFinished = true;
+					clearInterval( intervalId );
+					window._renderFinished = true;
 
-			}
+				}
 
-		}, 100 );
+			}, 100 );
+
+		} else {
+
+			traceRAF( 'discarded-after-start' );
+
+		}
 
 	};
 

@@ -467,6 +467,7 @@ async function checkFile( ctx, failedScreenshots, cleanPage, isMakeScreenshot, f
 
 				/* Resolve render promise */
 
+				console.log( '[E2E RAF] render gate opened' );
 				window._renderStarted = true;
 
 				await new Promise( function ( resolve, reject ) {
@@ -501,11 +502,11 @@ async function checkFile( ctx, failedScreenshots, cleanPage, isMakeScreenshot, f
 
 				throw new Error( `Error happened while rendering file ${ file }: ${ e }` );
 
-			} /* else { // This can mean that the example doesn't use requestAnimationFrame loop
+			} else { // This can mean that the example doesn't use requestAnimationFrame loop
 
 				console.yellow( `Render timeout exceeded in file ${ file }` );
 
-			} */ // TODO: fix this
+			}
 
 		}
 
