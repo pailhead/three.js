@@ -167,22 +167,6 @@
 
 				} );
 
-				setInterval( () => {
-
-					let index = Math.floor( Math.random() * boxes.count );
-
-					position.set( 0, Math.random() + 1, 0 );
-					physics.setMeshPosition( boxes, position, index );
-
-					//
-
-					index = Math.floor( Math.random() * spheres.count );
-
-					position.set( 0, Math.random() + 1, 0 );
-					physics.setMeshPosition( spheres, position, index );
-
-				}, 1000 / 60 );
-
 				window.addEventListener( 'resize', onWindowResize );
 
 			}
@@ -197,7 +181,25 @@
 
 			}
 
+			function spawn() {
+
+				let index = Math.floor( Math.random() * boxes.count );
+
+				position.set( 0, Math.random() + 1, 0 );
+				physics.setMeshPosition( boxes, position, index );
+
+				//
+
+				index = Math.floor( Math.random() * spheres.count );
+
+				position.set( 0, Math.random() + 1, 0 );
+				physics.setMeshPosition( spheres, position, index );
+
+			}
+
 			function animate() {
+
+				spawn();
 
 				renderer.render( scene, camera );
 
