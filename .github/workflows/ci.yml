@@ -49,10 +49,9 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        CI: [ 4 ]
+        CI: [ 0, 1, 2, 3, 4 ]
     env:
       CI: ${{ matrix.CI }}
-      E2E_EXTRA_DELAY: 200
     steps:
       - name: Git checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -71,7 +70,7 @@ jobs:
         run: npm run build
 
       - name: === E2E testing ===
-        run: xvfb-run -a npm run test-e2e -- physics_jolt_instancing
+        run: xvfb-run -a npm run test-e2e
       - name: Upload output screenshots
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()
