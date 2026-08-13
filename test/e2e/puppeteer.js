@@ -493,7 +493,7 @@ async function checkFile( ctx, failedScreenshots, cleanPage, isMakeScreenshot, f
 
 				} );
 
-			}, renderTimeout, page.pageSize / 1024 / 1024 * parseTime * 1000 );
+			}, renderTimeout, page.pageSize / 1024 / 1024 * parseTime * 1000 + Number( process.env.E2E_EXTRA_DELAY || 0 ) );
 
 		} catch ( e ) {
 
