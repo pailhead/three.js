@@ -49,7 +49,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        CI: [ 0, 1, 2, 3, 4 ]
+        CI: [ 4 ]
     env:
       CI: ${{ matrix.CI }}
     steps:
@@ -70,7 +70,7 @@ jobs:
         run: npm run build
 
       - name: === E2E testing ===
-        run: xvfb-run -a npm run test-e2e
+        run: xvfb-run -a npm run test-e2e -- webgpu_pmrem_cubemap
       - name: Upload output screenshots
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         if: always()

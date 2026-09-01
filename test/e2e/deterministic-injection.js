@@ -25,8 +25,25 @@
 
 	window._renderStarted = false;
 	window._renderFinished = false;
+	window._e2eRAFTrace = [];
+
+	function traceRAF( event ) {
+
+		const entry = {
+			event,
+			time: window.performance._now(),
+			renderStarted: window._renderStarted,
+			renderFinished: window._renderFinished
+		};
+
+		window._e2eRAFTrace.push( entry );
+		console.log( `[E2E RAF] ${ event } started=${ entry.renderStarted } finished=${ entry.renderFinished }` );
+
+	}
 
 	window.requestAnimationFrame = function ( cb ) {
+
+		traceRAF( 'request' );
 
 		if ( window._renderFinished === true ) return;
 
@@ -36,6 +53,7 @@
 
 				if ( window._renderStarted === true ) {
 
+					traceRAF( 'callback' );
 					cb( now() );
 
 					clearInterval( intervalId );
@@ -44,6 +62,10 @@
 				}
 
 			}, 100 );
+
+		} else {
+
+			traceRAF( 'discarded-after-start' );
 
 		}
 
